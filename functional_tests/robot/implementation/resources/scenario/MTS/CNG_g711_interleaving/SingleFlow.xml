@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+<createListenpointRTPFLOW name="CNG_g711_interleaving" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+            <parameter name="[testcase:payloadList]" operation="set" value="[[fileWave(0)]]"/>
+            <parameter name="[bitRate]" operation="set" value="[[fileWave(2)]]"/>
+            <!-- <parameter name="[payloadType]" operation="set" value="8"/> -->
+
+       <sendMessageRTPFLOW listenpoint="CNG_g711_interleaving" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+          <!-- <flow duration="[duration]" bitRate="[bitRate]" synchronous="true" packetLost="0"> -->
+            <flow packetNumber="[nbPacket]" bitRate="[bitRate]" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="[seqnum]" timestamp="[timestamp]"/>
+            <payload format="binary">[payloadList]</payload>
+          </flow>
+        </sendMessageRTPFLOW>
+
+<removeListenpointRTPFLOW name="CNG_g711_interleaving" />
+
+
+</scenario>
+

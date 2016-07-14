@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Related XMLSchema file: conf/schemas/scenario.xsd -->
+
+<scenario>
+
+  <parameter name="[inviteeName1]" operation="set" value="6000000"/>
+
+  <parameter name="[localPortRTP]" operation="set" value="13220"/>
+  <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+
+  <parameter name="[localPortRTP]" operation="set" value="13200"/>
+  <parameter name="[100_DOMAIN_ADDR]" operation="set" value="192.168.108.26"/>
+  <parameter name="[clientName]" operation="set" value="5000000"/>
+  
+  <parameter name="[localTag]" operation="string.random" value="10"/>
+  <parameter name="[newCallId]" operation="number.random" value="10000000"/>
+  <parameter name="[newCseqNumber]" operation="set" value="1"/>
+  <parameter name="[newBranchId]" operation="string.random" value="10"/>
+
+ <createListenpointSIP name="terminal" localHost="[localHostSIP]" localPort="[localPortSIP]"/>
+
+
+ <sendMessageSIP name="Send INVITE" destScenario="scenario" listenpoint="terminal">
+<![CDATA[INVITE sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP] SIP/2.0
+To: <sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP]>
+From: "[clientName]" <sip:[clientName]@[100_DOMAIN_ADDR]:[localPortSIP]>;tag=[localTag]
+Via: SIP/2.0/[transportResponse] [localHostSIP]:[localPortSIP];branch=z9hG4bK[newBranchId]
+Call-ID: [newCallId]
+CSeq: [newCseqNumber] INVITE
+Max-Forwards: 70
+Proxy-Authorization: IMS_GPRS_SCHEMA token="999"
+Allow: INVITE, ACK, BYE, CANCEL, REFER, MESSAGE, SUBSCRIBE, NOTIFY, PUBLISH
+Contact: <sip:[clientName]@[localSIP]>
+Supported: timer
+Session-Expires: 3600;refresher=uac
+Content-Length: x
+X-PTT-Switch-Required: YES
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8 101
+a=rtpmap:8 PCMA/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-15
+a=sendrecv
+a=+g.poc.talkburst
+a=maxptime:200
+a=ptime:200
+m=application 25463 udp TBCP
+a=fmtp:TBCP queuing=0;tb_priority=1;timestamp=0
+]]>
+  </sendMessageSIP>
+
+
+  <receiveMessageSIP name="Wait 100 Trying" request="false" type="INVITE" result="100" listenpoint="terminal">
+  </receiveMessageSIP>
+
+  <receiveMessageSIP name="Wait 180 Ringing" request="false" type="INVITE" result="180" listenpoint="terminal">
+  </receiveMessageSIP>
+
+  <parameter name="[newBranchId]" operation="string.random" value="10"/>                              
+
+  <receiveMessageSIP name="Wait 200 OK" request="false" type="INVITE" result="200" listenpoint="terminal">
+    <parameter name="[To]" operation="protocol.setFromMessage" value="header.To"/>                     
+    <parameter name="[From]" operation="protocol.setFromMessage" value="header.From"/>                         
+    <parameter name="[CallId]" operation="protocol.setFromMessage" value="header.Call-ID"/> 
+    <parameter name="[lastCseqNumber]" operation="protocol.setFromMessage" value="header.CSeq.Number"/>   
+    <parameter name="[contactURI]" operation="protocol.setFromMessage" value="header.Contact.Address.URI"/>	
+    <parameter name="[SDPConnectionAddress0]" operation="protocol.setFromMessage" value="content(0).Sdp.Connection.Address"/>
+    <parameter name="[SDPMediaPort0]" operation="protocol.setFromMessage" value="content(0).Sdp.Media.Port"/>
+
+  </receiveMessageSIP>
+
+    <parameter name="[Request-URI]" operation="set" value="[contactURI]"/>
+    <parameter name="[newBranchId]" operation="string.random" value="10"/>
+
+  <sendMessageSIP name="Send ACK" listenpoint="terminal">
+<![CDATA[ACK [Request-URI] SIP/2.0
+To: [To]
+From: [From]
+Call-ID: [CallId]
+CSeq: [lastCseqNumber] ACK
+Via: SIP/2.0/[transportResponse] [localSIP];branch=z9hG4bK[newBranchId]
+Contact: <sip:[clientName]@[localSIP]>
+Max-Forwards: 70
+User-Agent: PoC-client/OMA1.0 XmlLoader/v0.0
+Proxy-Authorization: IMS_GPRS_SCHEMA token="999"
+Allow: INVITE, ACK, CANCEL, BYE, NOTIFY
+Content-Length: 0
+]]>
+  </sendMessageSIP>
+
+
+
+
+  <receiveMessageSIP name="Wait INVITE" request="true" type="INVITE" listenpoint="terminal"> 
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>        
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>    
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/> 
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/> 
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/> 
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/> 
+
+    <parameter name="[RecordRoute]" operation="protocol.setFromMessage" value="header.Record-Route"/>               
+  </receiveMessageSIP>
+
+
+    <sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+
+    <receiveMessageSIP name="Wait Ack" request="true" type="ACK" listenpoint="terminal">
+                <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+                <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+                <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+                <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+                <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    </receiveMessageSIP>
+
+
+
+  <createListenpointRTP name="inviter" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+
+
+        <pause name="pause between RTP packets" seconds="0.1"/>
+        <parameter name="[ssrc]" operation="number.random" value="2147483647"/>
+        <sendMessageRTP listenpoint="inviter" destScenario="scenario"
+                        remoteHost="[SDPConnectionAddress0]" remotePort="[SDPMediaPort0(0)]">
+            <header ssrc="[ssrc]" payloadType="102" seqnum="0" timestamp="0"/>
+<!--            <payload format="binary">110111001000000000000000</payload> -->
+<!--            <payload format="binary">11011100 10000000 00000000 00000000</payload> -->
+            <payload format="binary">B11011100 B10000000 B00000000 B00000000</payload>
+
+<!-- <payload format="binary">
+    0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+    H80 H81 H82 H83 H84 H85 H86 H87 H88 H89 H8A H8b H8C H8d H8E H8f
+    B01010101 B10101010 B11111111 B0 B101
+    </payload>
+-->
+
+        </sendMessageRTP>
+
+    <pause name="pause between RTP packets" seconds="0.1"/>
+        <sendMessageRTP listenpoint="inviter" destScenario="scenario"
+                        remoteHost="[SDPConnectionAddress0]" remotePort="[SDPMediaPort0(0)]">
+            <header ssrc="[ssrc]" payloadType="102" seqnum="1" timestamp="1000"/>
+            <payload format="binary">B11011101 B10000000 B00000000 B00000000</payload>
+        </sendMessageRTP>
+
+        <pause name="pause between RTP packets" seconds="0.1"/>
+        <sendMessageRTP listenpoint="inviter" destScenario="scenario"
+        remoteHost="[SDPConnectionAddress0]" remotePort="[SDPMediaPort0(0)]">
+            <header ssrc="[ssrc]" payloadType="8" seqnum="2" timestamp="2000"/>
+            <payload format="text">abcdefghijklmnopqrstuvwxyz</payload>
+        </sendMessageRTP>
+
+  <removeListenpointRTP name="inviter"/>
+
+
+
+
+<!--
+  <receiveMessageSIP name="Wait INFO" request="true" type="INFO" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+
+
+  <receiveMessageSIP name="Wait INFO" request="true" type="INFO" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+
+
+
+
+
+  <receiveMessageSIP name="Wait INVITE" request="true" type="INVITE" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+-->
+
+<!--<pause name="Pause" seconds="2"/>-->
+
+<!-- <parameter name="[newCseqNumber]" operation="set" value="105"/>
+
+
+<sendMessageSIP name="Send INFO" destScenario="scenario" listenpoint="terminal">
+
+<![CDATA[INFO sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP] SIP/2.0
+To: <sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP]>
+From: "[clientName]" <sip:[clientName]@[100_DOMAIN_ADDR]:[localPortSIP]>;tag=[localTag]
+Via: SIP/2.0/[transportResponse] [localHostSIP]:[localPortSIP];branch=z9hG4bK[newBranchId]
+Call-ID: [newCallId]
+CSeq: [newCseqNumber] INFO
+Max-Forwards: 70
+Supported: timer
+Session-Expires: 3600;refresher=uac
+Content-Type: application/psscc
+Content-Length: x
+
+dial="F2"
+
+]]>
+
+    </sendMessageSIP>
+    <receiveMessageSIP name="Wait 200 OK" request="false" type="INFO" result="200" listenpoint="terminal">
+    </receiveMessageSIP>
+
+
+
+  <receiveMessageSIP name="Wait INFO" request="true" type="INFO" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+
+
+
+
+ <receiveMessageSIP name="Wait INFO" request="true" type="INFO" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+
+
+
+<pause name="Pause" seconds="2"/>
+
+
+
+
+ <parameter name="[newCseqNumber]" operation="set" value="115"/>
+
+
+<sendMessageSIP name="Send INFO" destScenario="scenario" listenpoint="terminal">
+
+<![CDATA[INFO sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP] SIP/2.0
+To: <sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP]>
+From: "[clientName]" <sip:[clientName]@[100_DOMAIN_ADDR]:[localPortSIP]>;tag=[localTag]
+Via: SIP/2.0/[transportResponse] [localHostSIP]:[localPortSIP];branch=z9hG4bK[newBranchId]
+Call-ID: [newCallId]
+CSeq: [newCseqNumber] INFO
+Max-Forwards: 70
+Supported: timer
+Session-Expires: 3600;refresher=uac
+Content-Type: application/psscc
+Content-Length: x
+
+dial="F1"
+
+]]>
+
+    </sendMessageSIP>
+    <receiveMessageSIP name="Wait 200 OK" request="false" type="INFO" result="200" listenpoint="terminal">
+    </receiveMessageSIP>
+
+
+
+  <receiveMessageSIP name="Wait INFO" request="true" type="INFO" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+
+  <receiveMessageSIP name="Wait INFO" request="true" type="INFO" timeout="60" listenpoint="terminal">
+    <parameter name="[lastTo]" operation="protocol.setFromMessage" value="header.To"/>
+    <parameter name="[lastFrom]" operation="protocol.setFromMessage" value="header.From"/>
+    <parameter name="[lastCallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+    <parameter name="[lastCseq]" operation="protocol.setFromMessage" value="header.CSeq"/>
+    <parameter name="[lastVia]" operation="protocol.setFromMessage" value="header.Via"/>
+    <parameter name="[contact]" operation="protocol.setFromMessage" value="header.Contact"/>
+  </receiveMessageSIP>
+
+
+
+<sendMessageSIP name="Send 200 OK" listenpoint="terminal">
+<![CDATA[SIP/2.0 200 OK
+To: [lastTo]
+From: [lastFrom]
+Via: [lastVia]
+Call-ID: [lastCallId]
+CSeq: [lastCseq]
+Contact: <sip:[clientName]@[localHostSIP]>
+User-Agent: IMSLoader
+Content-Length: x
+Content-Type: application/sdp
+
+v=0
+o=[clientName] 999 999 IN IP4 [localHostSIP]
+s=-
+c=IN IP4 [localHostSIP]
+t=0 0
+m=audio [localPortRTP] RTP/AVP 8
+a=rtpmap:8 PCMA/8000
+a=ptime:20
+a=sendrecv
+
+]]>
+    </sendMessageSIP>
+
+-->
+<pause name="Pause" seconds="2"/>
+
+ <parameter name="[newCseqNumber]" operation="set" value="155"/>
+
+ <sendMessageSIP name="Send BYE" listenpoint="terminal">
+<![CDATA[BYE [Request-URI] SIP/2.0
+To: [To]
+From: [From]
+Call-ID: [lastCallId]
+CSeq: [newCseqNumber] BYE
+Contact: <sip:[clientName]@[localSIP]>
+Via: SIP/2.0/[transportResponse] [localSIP];branch=z9hG4bK[newBranchId]
+Proxy-Authorization: IMS_GPRS_SCHEMA token="999"
+User-Agent: PoC-client/OMA1.0 XmlLoader/v0.0
+Max-Forwards: 70
+Content-Length: 0
+]]>
+  </sendMessageSIP>
+
+  <receiveMessageSIP name="Wait 200 OK" request="false" type="BYE" result="200" listenpoint="terminal">
+  </receiveMessageSIP>
+
+
+
+</scenario>
+

@@ -1,0 +1,74 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 crash_itc_file_block/
+${chan_num}                             1
+
+
+*** Test Cases ***
+
+
+Recording Files After Blocking Directory
+     [Documentation]                     Имитируем блокировку директории куда записываются файлы и проверяем что запись началось после разблокировки директории
+     Check RVOP Connection
+     Blocking Folder
+     Sleep                               1
+     Start MTS
+     Sleep                               8
+     Check Warnings
+     Unblocking Folder
+     CRS.Check File Count                 ${chan_num}     ${1}
+     CRS.Check File Size                  ${chan_num}     ${55000}    ${75000}    ${1}    g729_mx
+     [Teardown]                           Clean Files After Test
+
+
+*** Keywords ***
+My Setup
+        Restoring CRS-MKD-MCU-Meta-BE-ITC G729 Configs
+        Setup Path
+        Restart Voice
+        Restart Meta
+        Restart ITC
+        Create folder for logs
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm
+
+
+Blocking Folder
+     [Documentation]                     Блокируем папку куда сохраняются файлы
+     CRS.Run Command                     chattr +i -R ${CRS_STORAGE_REMOTE_PATH}/voice/local/1
+
+
+Check Warnings
+     [Documentation]                     Проверяем warning.log
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/warning.log    ${0}    File open error
+
+
+Unblocking Folder
+     [Documentation]                     Блокируем папку куда сохраняются файлы
+     CRS.Run Command                     chattr -i -R ${CRS_STORAGE_REMOTE_PATH}/voice/local/1
+     Sleep                               80     # wait for mts to complete
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${0}    sequential
+     Sleep                               3
+
+Clean Files After Test
+     ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+     CRS.Del Files In Folder             ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}/
+     CRS.Emptying File                   ${file}

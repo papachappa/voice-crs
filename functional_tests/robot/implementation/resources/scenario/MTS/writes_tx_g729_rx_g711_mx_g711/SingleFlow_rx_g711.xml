@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+
+<createListenpointRTPFLOW name="writes_tx_g729_rx_g711_mx_g711_1" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+   <parameter name="[payloadList_g711]" operation="set" value="[[file_g711(0)]]"/>
+    <parameter name="[bitRate_g711]" operation="set" value="[[file_g711(2)]]"/>
+    <parameter name="[payloadType_g711]" operation="set" value="8"/>
+    <parameter name="[nbPacket_g711]" operation="set" value="500"/>
+    <parameter name="[seqnum_g711]" operation="set" value="0"/>
+    <parameter name="[timestamp_g711]" operation="set" value="0"/>
+
+    <parameter name="[ssrc]" operation="set" value="1000"/>
+
+    <sendMessageRTPFLOW listenpoint="writes_tx_g729_rx_g711_mx_g711_1" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+         <!--  <flow packetNumber="[nbPacket_g711]" bitRate="[bitRate_g711]" synchronous="true" packetLost="0"> -->
+          <flow duration="10" bitRate="[bitRate_g711]" synchronous="true" packetLost="0">
+          <header ssrc="[ssrc]" payloadType="[payloadType_g711]" seqnum="[seqnum_g711]" timestamp="[timestamp_g711]"/>
+          <payload format="binary">[payloadList_g711]</payload>
+          </flow>
+    </sendMessageRTPFLOW>
+
+
+<removeListenpointRTPFLOW name="writes_tx_g729_rx_g711_mx_g711_1" />
+
+</scenario>
+

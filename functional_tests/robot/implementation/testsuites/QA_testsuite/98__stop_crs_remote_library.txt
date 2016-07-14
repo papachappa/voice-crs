@@ -1,0 +1,14 @@
+*** Settings ***
+
+Library     ${EXECUTION_LIB_PATH}/Manipulation.py    WITH NAME    Manipulation
+
+Documentation          Удаленно заходим на машину с запущенной CRS и завершаем работу библиотеки CRS_Remote_Library
+
+
+*** Test Cases ***
+
+Stop CRS Remote Library
+
+         [Documentation]    Завершаем работу CRS Remote Library
+         Stop CRS Library   ${remote_lib_host}
+         Sleep             2

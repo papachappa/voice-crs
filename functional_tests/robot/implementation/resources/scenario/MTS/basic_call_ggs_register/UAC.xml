@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Related XMLSchema file: conf/schemas/scenario.xsd -->
+
+<scenario>
+
+  <parameter name="[inviteeName1]" operation="set" value="6000"/>
+  <parameter name="[100_DOMAIN_ADDR]" operation="set" value="192.168.108.26"/>
+  <parameter name="[clientName]" operation="set" value="5130"/>
+  <parameter name="[localTag]" operation="string.random" value="10"/>
+  <parameter name="[newCallId]" operation="number.random" value="10000000"/>
+  <parameter name="[newBranchId]" operation="string.random" value="10"/>
+  <parameter name="[newCseq]" operation="number.random" value="10000000"/>
+
+ <sendMessageSIP name="Send REGISTER" remoteHost="[remoteHostSIP]" remotePort="[remotePortSIP]" destScenario="crs">
+<![CDATA[
+REGISTER sip:[inviteeName1]@[remoteSIP] SIP/2.0
+To: "[inviteeName1]" <sip:[inviteeName1]@[100_DOMAIN_ADDR]>
+From: "[inviteeName1]" <sip:[inviteeName1]@[100_DOMAIN_ADDR]>;tag=[localTag]
+Call-ID:[newCallId]
+CSeq: [newCseq] REGISTER
+Via: SIP/2.0/[transportResponse] [localSIP];branch=z9hG4bK[newBranchId]
+Max-Forwards: 70
+Contact: <sip:[inviteeName1]@[localSIP]>
+Expires: 3600
+Content-Length: 0
+]]>
+
+  </sendMessageSIP>
+
+  <receiveMessageSIP name="Forbidden 403" request="false" type="FORBIDDEN" result="403">
+ <parameter name="[To]" operation="protocol.setFromMessage" value="header.To"/>
+ <parameter name="[From]" operation="protocol.setFromMessage" value="header.From"/>
+ <parameter name="[CallId]" operation="protocol.setFromMessage" value="header.Call-ID"/>
+ <!-- <parameter name="[Cseq]" operation="protocol.setFromMessage" value="header.CSeq"/> -->
+ </receiveMessageSIP>
+
+
+</scenario>

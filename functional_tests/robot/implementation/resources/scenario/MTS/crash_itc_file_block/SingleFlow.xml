@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+<createListenpointRTPFLOW name="crash_itc_file_block" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+        <parameter name="[testcase:payloadList]" operation="set" value="[[fileWave(0)]]"/>
+        <parameter name="[payloadType]" operation="set" value="8"/>
+        <parameter name="[bitRate]" operation="set" value="[[fileWave(2)]]"/>
+        <parameter name="[nbPacket]" operation="set" value="5000"/>
+
+        <sendMessageRTPFLOW listenpoint="crash_itc_file_block" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+            <!-- <flow packetNumber="[nbPacket]" bitRate="[bitRate]" synchronous="true" packetLost="0"> -->
+            <flow duration="70" bitRate="[bitRate]" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="0" timestamp="0"/>
+            <payload format="binary">[payloadList]</payload>
+            </flow>
+        </sendMessageRTPFLOW>
+
+<removeListenpointRTPFLOW name="crash_itc_file_block" />
+</scenario>

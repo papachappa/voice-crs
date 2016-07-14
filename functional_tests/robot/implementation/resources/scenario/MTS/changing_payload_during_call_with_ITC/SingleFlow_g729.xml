@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+<createListenpointRTPFLOW name="[FlowName_g729]" localHost="[localHostRTP]" localPort="[localPortRTP2]"/>
+
+    <parameter name="[payloadList]" operation="set" value="[[file_g729(0)]]"/>
+    <parameter name="[timestampList]" operation="set" value="[[file_g729(1)]]"/>
+    <parameter name="[seqList]" operation="set" value="[[file_g729(2)]]"/>
+    <parameter name="[payloadType]" operation="set" value="[[file_g729(3)]]"/>
+    <parameter name="[nbPacket]" operation="list.size" value="[payloadList]"/>
+    <parameter name="[deltaTime]" operation="set" value="[[file_g729(4)]]"/>
+
+    <sendMessageRTPFLOW listenpoint="[FlowName_g729]" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+        <!-- <flow packetNumber="[nbPacket]" bitRate="8" synchronous="true" packetLost="0"> -->
+            <flow packetNumber="[nbPacket]" deltaTime="20" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="[seqList]" timestamp="[timestampList]"/>
+            <payload format="binary">[payloadList]</payload>
+        </flow>
+    </sendMessageRTPFLOW>
+
+
+<removeListenpointRTPFLOW name="[FlowName_g729]" />
+
+
+<!--<createListenpointRTPFLOW name="[FlowName_g711]" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+            <parameter name="[testcase:payloadList]" operation="set" value="[[fileWave(0)]]"/>
+            <parameter name="[bitRate]" operation="set" value="[[fileWave(2)]]"/>
+            <parameter name="[payloadType]" operation="set" value="8"/>
+            <parameter name="[timestamp]" operation="set" value="512"/>
+            <parameter name="[seqnum]" operation="set" value="81920"/>
+
+       <sendMessageRTPFLOW listenpoint="[FlowName_g711]" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+          <flow duration="10" bitRate="[bitRate]" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="[seqnum]" timestamp="[timestamp]"/>
+            <payload format="binary">[payloadList]</payload>
+          </flow>
+        </sendMessageRTPFLOW>
+
+<removeListenpointRTPFLOW name="[FlowName_g711]" />
+
+-->
+
+
+</scenario>
+

@@ -1,0 +1,64 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup 
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                  increase_timestamp_during_call_g711_with_itc/
+${qty}                                   ${1}
+${chan_num}                              1
+
+
+*** Test Cases ***
+
+Increase Timestamp During Call Send G711 With ITC
+     [Documentation]                     Имитируем два вызова, ITC доступен, во время второго резко возрастает timestamp, проверяем количество файлов, их размер
+     Start MTS
+     Check File Count Codec Type
+     Check Duration FileSize
+
+
+
+
+
+*** Keywords ***
+
+My Setup
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Voice
+      Restart ITC
+      Define folder for logs
+      Check RVOP Connection
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    sequential
+     Check RVOP Connection
+     Sleep                               3
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm
+
+
+Check Duration FileSize
+      [Documentation]                       Проверяем  размер файла и длительность
+      CRS.Check File Size                  ${chan_num}     ${20000}    ${22000}   ${0}
+      CRS.Check Duration Of File           g729_mx    ${chan_num}   ${20000}   ${1000}
+      CRS.Del File                          ${META_LOGS_DIR}/${chan_num}
+
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${qty}
+
+

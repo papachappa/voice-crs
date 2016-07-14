@@ -1,0 +1,180 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${TrafficLevel}                         1
+${IterationsLimit}                      1
+${RTP_time}                             10000
+${PATH}                                 be_changing_meta_in_channel
+${chan_num}                             1
+${meta_port_before}                            33333
+${voice_port_before}                           16600
+${meta_port_after}                            33336
+${voice_port_after}                           16609
+
+${curl_after_command}                     curl --digest  -u root:elephant -X POST http://192.168.108.26:8087/modify_channel_data?id=1 --data '{"Description" : "ATS channel", 
+...                                       "MetaPort" : ${meta_port_after}, "Name" : "ATS", "Type" : "ATS", "VoicePort" : ${voice_port_after}}'
+${curl_before_command}                    curl --digest  -u root:elephant -X POST http://192.168.108.26:8087/modify_channel_data?id=1 --data '{"Description" : "ATS channel", 
+...                                       "MetaPort" : ${meta_port_before}, "Name" : "ATS", "Type" : "ATS", "VoicePort" : ${voice_port_before}}'
+
+
+
+*** Test Cases ***
+
+
+# MKD voice ports 16600, meta ports 33333
+# Voice and Meta ports 16600/33333
+
+Start Sending MV-SIP MKD port 16600 Meta Port 33333 Voice port 16600
+     [Documentation]                     Запускаем MV-SIP, проверяем  размер файла, качество, мета информацию, а также время событий
+      [Setup]                            Setup And Check MV-SIP Parameters
+      Start Sending MV-SIP
+      Check duration and quality and meta
+      [Teardown]                         Clean Files After Test
+
+
+# MKD voice ports 16600, meta ports 33333
+# Voice and Meta ports 16609/33336
+
+
+
+Start Sending MV-SIP MKD port 16600 Meta Port 33333 Voice port 16609
+     [Documentation]                     Запускаем MV-SIP, Проверяем  отсутствие Meta информации и файлов вызовов
+     [Setup]                             Change Meta And Voice Ports 16609
+     Start Sending MV-SIP
+     Check absence of duration and quality and meta
+     [Teardown]                         Clean Files After Test
+
+
+# # MKD voice ports 16609, meta ports 33336
+# # Voice and Meta ports 16609/33336
+
+
+Start Sending MV-SIP MKD Port 16609 Meta Port 33336 Voice port 16609
+     [Documentation]                     Запускаем MV-SIP, Проверяем  размер файла, качество, мета информацию, а также время событий
+     [Setup]                              Change MKD Meta and Voice Ports 16609
+     Start Sending MV-SIP
+     Check duration and quality and meta
+     [Teardown]                         Clean Files After Test
+
+# # MKD voice ports 16609, meta ports 33336
+# # Voice and Meta ports 16600/33333
+
+
+Start Sending MV-SIP MKD Port 16609 Meta Port 33336 Voice port 16600
+     [Documentation]                     Запускаем MV-SIP, Проверяем  отсутствие Meta информации и файлов вызовов
+     [Setup]                             Change Meta And Voice Ports 16600
+     Start Sending MV-SIP
+     Check absence of duration and quality and meta
+
+
+*** Keywords ***
+My Setup
+      Restoring MVSIP G729 config
+      Stop Sending MVSIP RTP
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Module
+      Restart ITC
+
+
+Setup And Check MV-SIP Parameters
+      [Documentation]                    Проверяем правильность конфигов MV-SIP параметры Hosts and Ports
+      Check Host and Port In MV-SIP configs
+      Sleep                              5
+
+      @{int_1} =                         CRS.Get Integer       ${MVSIP0_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+      @{int_2} =                         CRS.Get Integer       ${MVSIP1_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+
+      CRS.Replace String                 ${MVSIP0_cfg_file}         TrafficLevel = @{int_1}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         IterationsLimit = @{int_1}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         RTP_time = @{int_1}[2]            RTP_time = ${RTP_time}
+      Sleep                              1
+
+      CRS.Replace String                 ${MVSIP1_cfg_file}    TrafficLevel = @{int_2}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    IterationsLimit = @{int_2}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    RTP_time = @{int_2}[2]            RTP_time = ${RTP_time}
+      Sleep                              1
+      Check Loadable Parameters In MV-SIP configs
+      Sleep                              1
+      SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Start Sending MV-SIP
+     [Documentation]                     Запускаем MV-SIP
+     Sleep                               2
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Sleep                               30
+
+
+
+Change Meta And Voice Ports 16609
+      [Documentation]                       Меням порты в мета и войс
+      CRS.Run Command                       ${curl_after_command}
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}   "MetaPort" : 33336
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}   "VoicePort" : 16609
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}     "MetaPort" : 33336
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}   "VoicePort" : 16609
+
+
+Change MKD Meta and Voice Ports 16609
+      [Documentation]                       Изменяем в МКД мета войс порты
+      ${file}=                              CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/Config.cfg     CRS1_RTP_Address = 192.168.108.26:16600        CRS1_RTP_Address = 192.168.108.26:16609
+      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    Port = 33333;     Port = 33336;
+      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    Login="33333";     Login="33336";
+      CRS.Run Command                       ${CRS_MKD_REMOTE_PATH}/restart -f
+      CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/Config.cfg    ${0}    CRS1_RTP_Address = 192.168.108.26:16609
+      CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    ${0}    Port = 33336;
+      CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    ${0}    Login="33336";
+
+Change Meta And Voice Ports 16600
+      [Documentation]                       Меням порты в мета и войс
+      CRS.Run Command                       ${curl_before_command}
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}    "MetaPort" : 33333
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}    "VoicePort" : 16600
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}    "MetaPort" : 33333
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}    "VoicePort" : 16600
+
+
+
+
+
+Check duration and quality and meta
+      [Documentation]                       Проверяем  размер файла и качество, также мета информацию, проверяем соответствие времени установления SIP сообщений и время в мета логах
+      CRS.Check File Size                  ${chan_num}     ${7000}    ${12000}   ${1}
+      ${qty}=                             Evaluate     ${IterationsLimit} * 5
+      CRS.Analyzing Files                ${70}    ${chan_num}    ${qty}
+      ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+      CRS.Check File Contain              ${file}    ${1}    ConnectionSetup;     ConnectionReleased;
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     SippA.Import CRS Logs               ${CRS_REMOTE_PATH}        ${remote_lib_host}
+     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Check absence of duration and quality and meta
+      [Documentation]                       Проверяем  отсутствие Meta информации и файлов вызовов
+       ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+       CRS.Check File Not Contain          ${file}    ConnectionSetup;     ConnectionReleased;
+       CRS.List Files                      ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
+
+Check MV-SIP Log Files
+     [Documentation]                     Проверяем MV-SIP логи на наличие несостоявшихся вызовов
+     SippA.Check MVSIP Logs
+
+Clean Files After Test
+     ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+     CRS.Del Files In Folder             ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}/
+     CRS.Emptying File                   ${file}

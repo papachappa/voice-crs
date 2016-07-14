@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test name="SIP" description="SIP regression tests" >
+
+    
+    
+    <!-- <parameter name="[localPortSIP]" operation="set" value="[localPortSIP]" description="local port of the MTS host" editable="true"/> -->
+
+
+    <parameter name="[localHostSIP]" operation="set" value="192.168.108.26" description="local address of the MTS host" editable="true"/>
+    <!-- <parameter name="[localPortSIP]" operation="set" value="15500" description="local port of the MTS host" editable="true"/> -->
+    <parameter name="[localPortSIP]" operation="file.readProperty" value="sip.properties" value2="listenpoint.LOCAL_PORT"/>
+    <parameter name="[localSIP]" operation="set" value="[localHostSIP]:[localPortSIP]"/>
+
+    <!-- <parameter name="[localClient]" operation="set" value="true" description="flag to activate the client scenario" editable="true" /> -->
+
+    <parameter name="[remoteHostSIP]" operation="set" value="192.168.108.26" description="remote address of the SUT host" editable="true"/>
+    <parameter name="[remotePortSIP]" operation="set" value="5061" description="remote port of the SUT host" editable="true"/>
+
+    <parameter name="[remoteSIP]" operation="set" value="[remoteHostSIP]:[remotePortSIP]"/>
+    <!-- <parameter name="[remoteServer]" operation="set" value="true" description="flag to activate the server scenario" editable="true"/> -->
+
+    <!-- RTP parameters -->
+
+
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26" description="local address of the MTS host" editable="true" />
+    <parameter name="[localPortRTP]" operation="set" value="26000" description="local port of the MTS host" editable="true" />
+    <parameter name="[localPortRTP_2]" operation="set" value="27000" description="local port of the MTS host" editable="true" />
+    <parameter name="[localPortRTP_3]" operation="set" value="28000" description="local port of the MTS host" editable="true" />
+    <parameter name="[localClient]" operation="set" value="true" description="flag to activate the client scenario" editable="true" />
+
+    <parameter name="[remoteHostRTP]" operation="system.ipaddress" value2="[IPVersion]"/>
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26" description="remote address of the SUT host" editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="17600" description="remote port of the SUT host" editable="true" />
+    <!-- <parameter name="[remoteServer]" operation="set" value="true" description="flag to activate the server scenario" editable="true"/> -->
+
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+
+    <!-- transport parameters-->
+    <parameter name="[transportRequest]" operation="set" value="udp"/>
+    <parameter name="[transportResponse]" operation="set" value="UDP"/>
+
+    <!-- timers for the retransmissions-->
+    <parameter name="[retransmitNumber]" operation="set" value="10"/>
+    <parameter name="[RetransTimeout]" operation="set" value="1"/>
+
+    <parameter name="[retransmitTimers(0)]" operation="set" value="500"/>
+    <parameter name="[retransmitTimers(1)]" operation="set" value="1000"/>
+    <parameter name="[retransmitTimers(2)]" operation="set" value="2000"/>
+    <parameter name="[retransmitTimers(3)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(4)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(5)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(6)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(7)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(8)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(9)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(10)]" operation="set" value="4000"/>
+
+    <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
+
+    <testcase name="ggs_reinvite_with_double_audio" state="true" number="[iterations]" description="sip">
+    <scenario file="UAC.xml" name="ggs_reinvite_with_double_audio" state="true" routingName="ggs_reinvite_with_double_audio"/>
+    </testcase>
+
+</test>

@@ -1,0 +1,186 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Test Setup         My Setup 
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+${PATH_zero_audio}                                 ggs_with_zero_audio/
+${PATH_empty_audio}                                 ggs_with_empty_audio/
+${PATH_empty_sdp}                                 ggs_with_empty_sdp/
+${MTS_DIR}                              mts_log
+${chan_num}                             ${4}
+${qty}                                  ${1}
+
+*** Test Cases ***
+
+SDP With Zero Audio
+       [Documentation]                   Имитируем вызов в SDP с нулевым аудио
+       Define folder for logs            ${PATH_zero_audio}
+       Start MTS                         ${PATH_zero_audio}
+       Import Logs                       ${PATH_zero_audio}
+       Check Logs
+       Check Voice Local
+       Check Meta Information
+       Check Meta Logs                   m=audio 0 RTP/AVP
+       Check SIP And Meta
+
+
+
+SDP With Empty Audio
+       [Documentation]                   Имитируем вызов в SDP с пустым аудио
+       Define folder for logs            ${PATH_empty_audio}
+       Start MTS                         ${PATH_empty_audio}
+       Import Logs                       ${PATH_empty_audio}
+       Check Logs
+       Check Voice Local
+       Check Meta Information
+       Check Meta Logs                   t=0 0
+       Check SIP And Meta
+
+
+
+Empty SDP
+       [Documentation]                   Имитируем вызов с пустым SDP
+       Define folder for logs            ${PATH_empty_audio}
+       Start MTS                         ${PATH_empty_audio}
+       Import Logs                       ${PATH_empty_audio}
+       Check Logs
+       Check Voice Local
+       Check Meta Information
+       Check Meta Logs                   PrimFSM
+       Check SIP And Meta
+
+
+
+*** Keywords ***
+
+
+My Setup
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Voice
+      Restart Meta
+      Restart ITC
+
+
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+        [Arguments]                      ${PATH}
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     [Arguments]                         ${PATH}
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}   ${1}    sequential
+     Sleep                               3
+
+
+Import Logs
+     [Arguments]                         ${PATH}
+     [Documentation]                     Импортируем логи
+     @{New_PATH} =                       Split String      ${PATH}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH}[0]    ${remote_lib_host}
+
+#     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+#     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+#     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+Check Logs
+      [Documentation]                      Проверяем  логи CRS на предмет наличия warnings
+      CRS.Check File Contain               ${CRS_LOGS_DIR}/warning.log    ${1}    Not found dynamic channel configuration in internal map
+
+Check Voice Local
+      [Documentation]                      Проверяем отсутствие записанных файлов
+      CRS.List Files                       ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
+
+Check Meta Information
+      [Documentation]                     Проверяем события вызова в мета модуле
+      ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+      Set Suite Variable                  ${file}
+      CRS.Check File Contain              ${file}    ${1}    ActivateConference;;     DeactivateConference;
+
+Check Meta Logs
+      [Arguments]                         ${end}
+      [Documentation]                     Проверяем SIP сообщения в мета логах
+      CRS.Find Text Block                 ${CRS_META_REMOTE_PATH}/logs/trace.log    SIP/2.0 200 OK    Via: SIP/2.0/UDP     ${end}
+
+
+Check SIP And Meta
+      [Documentation]                     Проверяем соответствие времени установления SIP сообщений и время в мета логах
+      CRS.Check Event Time                ${CRS_META_REMOTE_PATH}/logs/sip_transport.log     ${file}    SIP/2.0 200 OK     ActivateConference;
+      CRS.Check Event Time                ${CRS_META_REMOTE_PATH}/logs/sip_transport.log     ${file}    BYE sip     DeactivateConference
+
+
+
+
+
+
+#Parse sip_transport.log
+#awk -v a="200 OK" 'BEGIN{RS=""}; $0 ~ a { print $0 }' < sip_transport.log | head -1 | cut -d " " -f2 | cut -d "." -f1
+#awk -v a="BYE sip" 'BEGIN{RS=""}; $0 ~ a { print $0 }' < sip_transport.log | head -1 | cut -d " " -f2 | cut -d "." -f1
+
+#Parse meta log
+#awk '/ActivateConference;/ { print $0 }' 2016-05-24\ 19\:00.log | cut -d " " -f2 | cut -d "." -f1
+#awk '/DeactivateConference/ { print $0 }' 2016-05-24\ 19\:00.log | cut -d " " -f2 | cut -d "." -f1
+
+#Ответ на пустой media 
+
+#SIP/2.0 200 OK
+#Via: SIP/2.0/UDP 192.168.108.26:15500;received=192.168.108.26;branch=z9hG4bKSLTdH2tIZO
+#To: <sip:6000@192.168.108.26:5061>;tag=146399303000000000
+#From: <sip:5130@192.168.108.26:15500>;tag=7pMXF5tKfj
+#Contact: <sip:6000@192.168.108.26:5061>
+#Call-ID: 04603055
+#CSeq: 1 INVITE
+#Content-Type: application/sdp
+#Content-Length: 88
+#Allow: INVITE,CANCEL,ACK,BYE,INFO,PRACK,UPDATE,NOTIFY,MESSAGE,REFER,OPTIONS
+
+#v=0
+#o=crs 2707506601 2707506601 IN IP4 192.168.108.26
+#c=IN IP4 192.168.108.26
+#t=0 0
+
+
+
+#Ответ на нулевой media 
+
+#SIP/2.0 200 OK
+#Via: SIP/2.0/UDP 192.168.108.26:15500;received=192.168.108.26;branch=z9hG4bKm0trjSqGSb
+#To: <sip:6000@192.168.108.26:5061>;tag=146399329300000001
+#From: <sip:5130@192.168.108.26:15500>;tag=o0HqOrS2xW
+#Contact: <sip:6000@192.168.108.26:5061>
+#Call-ID: 09898366
+#CSeq: 1 INVITE
+#Content-Type: application/sdp
+#Content-Length: 128
+#Allow: INVITE,CANCEL,ACK,BYE,INFO,PRACK,UPDATE,NOTIFY,MESSAGE,REFER,OPTIONS
+
+#v=0
+#o=crs 2707506602 2707506602 IN IP4 192.168.108.26
+#c=IN IP4 192.168.108.26
+#t=0 0
+#m=audio 0 RTP/AVP
+#m=application 0 udp
+
+
+#Ответ на пустой sdp
+
+#SIP/2.0 200 OK
+#Via: SIP/2.0/UDP 192.168.108.26:15500;received=192.168.108.26;branch=z9hG4bKUcwXUx4yq2
+#To: <sip:6000@192.168.108.26:5061>;tag=146399338100000002
+#From: <sip:5130@192.168.108.26:15500>;tag=My4Uert06k
+#Contact: <sip:6000@192.168.108.26:5061>
+#Call-ID: 08523277
+#CSeq: 1 INVITE
+#Content-Length: 0
+#Allow: INVITE,CANCEL,ACK,BYE,INFO,PRACK,UPDATE,NOTIFY,MESSAGE,REFER,OPTIONS
+
+
+

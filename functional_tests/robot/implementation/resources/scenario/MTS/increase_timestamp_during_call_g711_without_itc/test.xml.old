@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description=".." name="RTP">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[localPortRTP]" operation="set" value="26000" description="local port of the MTS host" editable="true" />
+
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
+    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host" editable="true" />
+
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+
+    <parameter name="[FlowName]" operation="set" value="mx"/>
+    <parameter name="[FlowName2]" operation="set" value="mx"/>
+    <parameter name="[ssrc]" operation="set" value="1000"/>
+
+
+        <parameter name="[PayloadType]" operation="set" value="8"/>   
+        <parameter name="[timestamp]" operation="set" value="0"/>
+        <parameter name="[seqnum]" operation="set" value="0"/>   
+
+
+        <parameter name="[timestamp2]" operation="set" value="120045600"/>
+        <parameter name="[seqnum2]" operation="set" value="50"/>   
+
+
+    <!-- <parameter name="pause" operation="set" value="5"/> -->
+
+    <!-- <for index="[index]" from="00" to="09" step="1"> -->
+
+    <testcase name="[FlowName]_g711_with_itc_before_increase_timestamp" state="true" number="[iterations]">      
+        <scenario file="SingleFlow.xml" name="[FlowName]" state="true" routingName="[FlowName]"/>
+    </testcase>
+
+    <testcase name="[FlowName2]_g711_with_itc_after_increase_timestamp" state="true" number="[iterations]">      
+        <parameter name="pause" operation="set" value="5"/>
+        <scenario file="SingleFlow.xml" name="[FlowName2]" state="true" routingName="[FlowName2]"/>
+    </testcase>
+
+    <!--    </for> -->
+
+</test>

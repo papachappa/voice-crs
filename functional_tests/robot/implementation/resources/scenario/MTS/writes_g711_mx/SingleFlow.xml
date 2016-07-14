@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+<createListenpointRTPFLOW name="writes_g711_mx" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+        <parameter name="[testcase:payloadList]" operation="set" value="[[fileWave(0)]]"/>
+        <parameter name="[payloadType]" operation="set" value="8"/>
+        <parameter name="[bitRate]" operation="set" value="[[fileWave(2)]]"/>
+        <parameter name="[nbPacket]" operation="set" value="500"/>
+
+        <sendMessageRTPFLOW listenpoint="writes_g711_mx" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+        <!--    <flow packetNumber="[nbPacket]" bitRate="[bitRate]" synchronous="true" packetLost="0">  -->
+            <flow duration="10" bitRate="[bitRate]" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="0" timestamp="0"/>
+            <payload format="binary">[payloadList]</payload>
+            </flow>
+        </sendMessageRTPFLOW>
+
+<removeListenpointRTPFLOW name="writes_g711_mx" />
+</scenario>

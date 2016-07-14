@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+    <createListenpointRTPFLOW name="[FlowName]" localHost="[localHostRTP(0)]" localPort="[localPortRTP]"/>
+
+    <sendMessageRTPFLOW listenpoint="[FlowName]" remoteHost="[remoteHostRTP(0)]" remotePort="[remotePortRTP]">
+        <flow packetNumber="50" bitRate="8" synchronous="true">
+            <header ssrc="[ssrc]" payloadType="[PayloadType]" seqnum="0" timestamp="0"/>
+        <payload format="text">Packet1 Packet2 Packet3 Packet4 Packet5 Packet6 Packet7 Packet8</payload>
+        </flow>
+
+    </sendMessageRTPFLOW>
+    <finally>
+        <removeListenpointRTPFLOW name="[FlowName]" />
+    </finally>
+</scenario>

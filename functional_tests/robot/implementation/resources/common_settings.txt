@@ -1,0 +1,357 @@
+*** Settings ***
+
+Library         Remote    http://${remote_lib_host}:${remote_lib_port}   WITH NAME   CRS
+Library         Remote    http://${remote_lib_host}:${sipp_B_remote_lib_port}   WITH NAME   SippB
+Library         Remote    http://${remote_lib_host}:${sipp_A_remote_lib_port}   WITH NAME   SippA
+Library         Remote    http://${remote_lib_host}:${sipp_C_remote_lib_port}   WITH NAME   SippC
+Library         String
+Library         ${EXECUTION_LIB_PATH}/Manipulation.py    WITH NAME   Manipulation
+Library         ${EXECUTION_LIB_PATH}/check_eraser.py    WITH NAME   Eraser
+Library         OperatingSystem
+Library         Process
+
+
+
+#Library   modules/MySQL.py      WITH NAME   MySQL
+#Library   ${execution_lib_path}/TimeSuite.py      WITH NAME   TimeSuite
+#Library   ${execution_lib_path}/ServerTime.py      WITH NAME   ServerTime
+#Library   modules/MySqlMkdVpbxCDR.py    WITH NAME   MySqlMkd
+#Library   ${execution_lib_path}/Manage.py     WITH NAME   Manage
+
+*** Variables ***
+
+${CRS_cfg_file}              ${CRS_REMOTE_PATH}/config/component/CRS.cfg
+${CRS_trace_cfg_file}        ${CRS_REMOTE_PATH}/config/Trace.cfg
+${CRS_cdr_file}              ${CRS_REMOTE_PATH}/logs/CRS_cdr.log
+${CRS_diagnostic_file}       ${CRS_REMOTE_PATH}/logs/CRS_diagnostic.log
+${CRS_alarm_cdr_file}        ${CRS_REMOTE_PATH}/logs/alarm_cdr.log
+${CRS_g729_saved_cfg_file}                      crs
+${CRS_g711_saved_cfg_file}                      crs_g711
+${CRS_cut_file_silence_1}                       crs_cut_file_silence_1
+${CRS_g729_long_stop_timer_saved_cfg_file}      crs_long_stop_timer
+${CRS_g729_file_fragmentation_saved_cfg_file}   crs_g729_file_fragmentation
+${CRS_g711_file_fragmentation_saved_cfg_file}   crs_g711_file_fragmentation
+${CRS_itc_saved_cfg_file}                       crs_itc
+${crs_cut_file_silence_huge_stop_timer}         crs_cut_file_silence_huge_stop_timer
+${crs_g711_long_stop_timer}                     crs_g711_long_stop_timer
+
+
+
+${CRS-META_saved_cfg_file}   crs_meta
+${CRS-BE_saved_cfg_file}     crs_be
+${CRS-MKD_saved_cfg_file}    mkd_crs
+${CRS-MCU_saved_cfg_file}    mcu_crs
+
+
+${MVSIP0_SIP_cfg_file}    ${MVSIP_REMOTE_PATH}/0/config/SIP.cfg.ifc0.OP1
+${MVSIP1_SIP_cfg_file}    ${MVSIP_REMOTE_PATH}/1/config/SIP.cfg.ifc0.SP1
+${MVSIP2_SIP_cfg_file}    ${MVSIP_REMOTE_PATH}/2/config/SIP.cfg.ifc0.OP2
+${MVSIP3_SIP_cfg_file}    ${MVSIP_REMOTE_PATH}/3/config/SIP.cfg.ifc0.SP2
+
+${MVSIP0_cfg_file}      ${MVSIP_REMOTE_PATH}/0/config/mv_sip_SBC-send-OP1.cfg
+${MVSIP1_cfg_file}      ${MVSIP_REMOTE_PATH}/1/config/mv_sip_SBC-answer-SP1.cfg
+${MVSIP2_cfg_file}      ${MVSIP_REMOTE_PATH}/2/config/mv_sip_SBC-answer-OP2.cfg
+${MVSIP3_cfg_file}      ${MVSIP_REMOTE_PATH}/3/config/mv_sip_SBC-send-SP2.cfg
+
+
+${MVSIP0_SIP_simlink_cfg_file}      ${MVSIP_REMOTE_PATH}/0/config/SIP.cfg
+${MVSIP1_SIP_simlink_cfg_file}      ${MVSIP_REMOTE_PATH}/1/config/SIP.cfg
+${MVSIP2_SIP_simlink_cfg_file}      ${MVSIP_REMOTE_PATH}/2/config/SIP.cfg
+${MVSIP3_SIP_simlink_cfg_file}      ${MVSIP_REMOTE_PATH}/3/config/SIP.cfg
+
+${MVSIP0_SIP_simlink_mv_sip_cfg_file}      ${MVSIP_REMOTE_PATH}/0/config/mv_sip.cfg
+${MVSIP1_SIP_simlink_mv_sip_cfg_file}      ${MVSIP_REMOTE_PATH}/1/config/mv_sip.cfg
+${MVSIP2_SIP_simlink_mv_sip_cfg_file}      ${MVSIP_REMOTE_PATH}/2/config/mv_sip.cfg
+${MVSIP3_SIP_simlink_mv_sip_cfg_file}      ${MVSIP_REMOTE_PATH}/3/config/mv_sip.cfg
+
+
+${mvsip0_g729_config_name}                    mvsip0_g729_CRS
+${mvsip1_g729_config_name}                    mvsip1_g729_CRS
+
+${mvsip0_g711_config_name}                    mvsip0_g711_CRS
+${mvsip1_g711_config_name}                    mvsip1_g711_CRS
+
+
+#${mvsip2_config_name}                    mvsip2_CRS
+#${mvsip3_config_name}                    mvsip3_CRS
+
+${mvsip0_port}                          5555
+${mvsip1_port}                          5556
+#${mvsip2_port}                          5557
+#${mvsip3_port}                          5558
+
+${mvsip0_remote_port}                   5060
+${mvsip1_remote_port}                   5060
+#${mvsip2_remote_port}                   5064
+#${mvsip3_remote_port}                   5066
+
+
+
+
+${local_ip_a}  ${remote_lib_host}
+${local_ip_b}  ${remote_lib_host}
+${local_ip_x}  ${remote_lib_host}
+
+
+${sipp_a_number}    6001
+${sipp_b_number}    2030
+${sipp_x_number}    2031
+
+
+
+${scenario_csv}      scenario.csv
+${scenario_csv_A}    6001.csv
+${scenario_csv_B}    2030.csv
+${scenario_csv_X}    2031.csv
+
+
+${log_error_A}       error${sipp_a_number}.log
+${log_message_A}     message${sipp_a_number}.log
+${log_log_A}         log${sipp_a_number}.log
+${log_counts_A}      counts${sipp_a_number}.csv
+
+
+${log_error_B}       error${sipp_b_number}.log
+${log_message_B}     message${sipp_b_number}.log
+${log_log_B}         log${sipp_b_number}.log
+${log_counts_B}      counts${sipp_b_number}.csv
+
+${log_error_X}       error${sipp_x_number}.log
+${log_message_X}     message${sipp_x_number}.log
+${log_log_X}         log${sipp_x_number}.log
+${log_counts_X}      counts${sipp_x_number}.csv
+
+${host_mkd_A}        192.168.125.12
+${host_mkd_B}        192.168.125.5
+${mkd_port}          5060
+
+${out_international_number}     981012345
+${out_national_number}          983123456789
+
+${password}         123456789
+#${parallel_search_number}       3778
+#${serial_search_number}         3779
+#${cycle_search_number}          3777
+
+${profiles}           profiles.vpbx
+${vpbx_sipp_a}        1/Users
+${vpbx_sipp_b}        5/Users
+${vpbx_sipp_c}        5/Users
+${vpbx_sipp_d}        5/Users
+${sipp_a_cfg}         2000.cfg
+${sipp_b_cfg}         ${sipp_b_number}.cfg
+#${sipp_c_cfg}         ${}.cfg
+#${sipp_d_cfg}         ${sipp_d_number}.cfg
+${sipp_a_prof}        ${profiles}/${vpbx_sipp_a}/${sipp_a_cfg}
+${sipp_b_prof}        ${profiles}/${vpbx_sipp_b}/${sipp_b_cfg}
+#${sipp_c_prof}        ${profiles}/${vpbx_sipp_c}/${sipp_c_cfg}
+#${sipp_d_prof}        ${profiles}/${vpbx_sipp_d}/${sipp_d_cfg}
+${registrations_db}   profiles/registrations.db
+
+
+
+${domen_A}          linksys.sip.pbx
+${domen_B}          qa.skv.sip.pbx
+${local_ip_a}       192.168.125.7
+${local_ip_b}       ${local_ip_a}
+${local_ip_x}       ${local_ip_a}
+
+${host_a_ip}        192.168.125.12:5060   # ip MKD
+${host_b_ip}     192.168.125.5:5060   # ip MKD
+${host_x_ip}     192.168.125.7:5060
+${host_x_ip_reverse}     192.168.125.7:5062
+#${host_d_ip}     192.168.125.12:5060
+
+
+
+*** Keywords ***
+
+
+
+
+Import MVSIP Logs
+    SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}       ${remote_lib_host}
+
+
+Import MKD Logs
+    SippA.Import MKD Logs               ${MKD_REMOTE_PATH}       ${remote_target_host}
+
+
+
+Restart Module
+    CRS.Restart Module                  crs   crs_be   crs_meta   mcu   mkd
+    Sleep                               20
+
+
+Restart Voice
+    CRS.Restart Module                  crs
+    Sleep                               10
+
+
+Restart BE
+    CRS.Restart Module                  crs_be
+    Sleep                               5
+
+
+Restart Meta
+    CRS.Restart Module                  crs_meta
+    Sleep                               5
+
+
+Restart MCU
+    CRS.Restart Module                  mcu
+    Sleep                               5
+
+
+Restart MKD
+    CRS.Restart Module                  mkd
+    Sleep                               10
+
+
+Restart ITC
+    Manipulation.Run Command Without Bash    /usr/protei/MAK/restart     ${itc_host_ip}
+    Sleep                                    15
+
+Start ITC
+    Manipulation.Run Command Without Bash    /usr/protei/MAK/start     ${itc_host_ip}
+    Sleep                                    15
+
+Stop ITC
+    Manipulation.Run Command Without Bash    /usr/protei/MAK/stop     ${itc_host_ip}
+    Sleep                                    15
+
+
+Setup Path
+    SippA.Setup                         ${SCENARIO_PATH}
+    CRS.Setup CRS Path                  ${CRS_MKD_REMOTE_PATH}   ${CRS_REMOTE_PATH}   ${CRS_BE_REMOTE_PATH}   ${CRS_META_REMOTE_PATH}   ${CRS_STORAGE_REMOTE_PATH}   ${CRS_MCU_REMOTE_PATH}   ${MVSIP_REMOTE_PATH}
+
+Get All Module Version
+    Get CRS Version
+    Get CRS-BE Version
+    Get CRS-Meta Version
+    Get MKD Version
+    Get MCU Version
+
+Get CRS Version
+    Manipulation.Get Module Version             CRS   ${CRS_REMOTE_PATH}/version    ${remote_lib_host}
+
+Get CRS-BE Version
+    Manipulation.Get Module Version             CRS-BE   ${CRS_BE_REMOTE_PATH}/version    ${remote_lib_host}
+
+Get CRS-Meta Version
+    Manipulation.Get Module Version             CRS-Meta   ${CRS_META_REMOTE_PATH}/version    ${remote_lib_host}
+
+Get MKD Version
+    Manipulation.Get Module Version             CRS-MKD   ${CRS_MKD_REMOTE_PATH}/version    ${remote_lib_host}
+
+Get MCU Version
+    Manipulation.Get Module Version             CRS-MCU   ${CRS_MCU_REMOTE_PATH}/version    ${remote_lib_host}
+
+Stop Sending MVSIP RTP
+    Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH} && ./stop_all.sh    ${remote_lib_host}
+
+Check Loadable Parameters In MV-SIP configs 
+     [Documentation]                    Проверка файла конфигов MV-SIP
+     CRS.Check File Contain               ${MVSIP0_cfg_file}    ${0}    TrafficLevel = ${TrafficLevel}     IterationsLimit = ${IterationsLimit}    RTP_time = ${RTP_time}
+     CRS.Check File Contain               ${MVSIP1_cfg_file}    ${0}    TrafficLevel = ${TrafficLevel}     IterationsLimit = ${IterationsLimit}    RTP_time = ${RTP_time}
+#     CRS.Check File Contain               ${MVSIP2_cfg_file}    ${0}    TrafficLevel = ${TrafficLevel}     IterationsLimit = ${IterationsLimit}    RTP_time = ${RTP_time}
+#     CRS.Check File Contain               ${MVSIP3_cfg_file}    ${0}    TrafficLevel = ${TrafficLevel}     IterationsLimit = ${IterationsLimit}    RTP_time = ${RTP_time}
+
+     Sleep                              1
+
+Check Host and Port In MV-SIP configs 
+      CRS.Check File Contain               ${MVSIP0_SIP_cfg_file}     ${0}     Host = ${remote_lib_host}    Port = 5555
+      CRS.Check File Contain               ${MVSIP1_SIP_cfg_file}     ${0}     Host = ${remote_lib_host}    Port = 5556
+#      CRS.Check File Contain               ${MVSIP2_SIP_cfg_file}     ${0}     Host = ${remote_lib_host}    Port = 5557
+#      CRS.Check File Contain               ${MVSIP3_SIP_cfg_file}     ${0}     Host = ${remote_lib_host}    Port = 5558
+
+      CRS.Check File Contain               ${MVSIP0_cfg_file}   ${0}    localhost = "${remote_lib_host}"   localport = "${mvsip0_port}"   remotehost1 = "${remote_lib_host}"   remoteport1 = "${mvsip0_remote_port}"
+      CRS.Check File Contain               ${MVSIP1_cfg_file}   ${0}    localhost = "${remote_lib_host}"   localport = "${mvsip1_port}"   remotehost1 = "${remote_lib_host}"   remoteport1 = "${mvsip1_remote_port}"
+#      CRS.Check File Contain               ${MVSIP2_cfg_file}   ${0}    localhost = "${remote_lib_host}"   localport = "${mvsip2_port}"   remotehost1 = "${remote_lib_host}"   remoteport1 = "${mvsip2_remote_port}"
+#      CRS.Check File Contain               ${MVSIP3_cfg_file}   ${0}    localhost = "${remote_lib_host}"   localport = "${mvsip3_port}"   remotehost1 = "${remote_lib_host}"   remoteport1 = "${mvsip3_remote_port}"
+
+
+Clear MTS Log
+     CRS.Run Command                      rm -rf ${MTS_REMOTE_LOG_PATH}/*
+
+
+Restoring MVSIP G729 config
+     CRS.Restore Config                   Protei-MV.SIP/0/${mvsip0_g729_config_name}
+     CRS.Restore Config                   Protei-MV.SIP/1/${mvsip1_g729_config_name}
+     #CRS.Restore Config                   Protei-MV.SIP/2/${mvsip2_config_name}
+     #CRS.Restore Config                   Protei-MV.SIP/3/${mvsip3_config_name}
+
+
+Restoring MVSIP G711 config
+     CRS.Restore Config                   Protei-MV.SIP/0/${mvsip0_g711_config_name}
+     CRS.Restore Config                   Protei-MV.SIP/1/${mvsip1_g711_config_name}
+     #CRS.Restore Config                   Protei-MV.SIP/2/${mvsip2_config_name}
+     #CRS.Restore Config                   Protei-MV.SIP/3/${mvsip3_config_name}
+
+
+Restoring CRS-MKD-MCU-Meta-BE G729 configs
+     CRS.Restore Config                   Protei-CRS/${CRS_g729_saved_cfg_file}
+     Restoring Configs
+
+Restoring CRS-MKD-MCU-Meta-BE G711 configs
+     CRS.Restore Config                   Protei-CRS/${CRS_g711_saved_cfg_file}
+     Restoring Configs
+
+
+Restoring CRS-MKD-MCU-Meta-BE-file-fragmentation G729 Configs
+     CRS.Restore Config                   Protei-CRS/${CRS_g729_file_fragmentation_saved_cfg_file}
+     Restoring Configs
+
+
+Restoring CRS-MKD-MCU-Meta-BE-file-fragmentation G711 Configs
+     CRS.Restore Config                   Protei-CRS/${CRS_g711_file_fragmentation_saved_cfg_file}
+     Restoring Configs
+
+Restoring CRS-MKD-MCU-Meta-BE-long-stop-timer G729 configs
+     CRS.Restore Config                   Protei-CRS/${CRS_g729_long_stop_timer_saved_cfg_file}
+     Restoring Configs
+
+Restoring CRS-MKD-MCU-Meta-BE-ITC G729 Configs
+     CRS.Restore Config                   Protei-CRS/${CRS_itc_saved_cfg_file}
+     Restoring Configs
+
+Restoring CRS-MKD-MCU-Meta-BE-Cut-Silence G729 Configs
+     CRS.Restore Config                   Protei-CRS/${CRS_cut_file_silence_1}
+     Restoring Configs
+
+Restoring CRS-MKD-MCU-Meta-BE-Cut-Silence-Huge-Timer G729 Configs
+     CRS.Restore Config                   Protei-CRS/${crs_cut_file_silence_huge_stop_timer}
+     Restoring Configs
+
+Restoring CRS-MKD-MCU-Meta-BE-Long-Stop-Timer G711 Configs
+     CRS.Restore Config                   Protei-CRS/${crs_g711_long_stop_timer}
+     Restoring Configs
+
+
+Restoring Configs
+     CRS.Restore Config                   Protei-CRS-BE/${CRS-BE_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS-Meta/${CRS-META_saved_cfg_file}
+     CRS.Restore Config                   Protei-MKD/MKD/${CRS-MKD_saved_cfg_file}
+     CRS.Restore Config                   Protei-MKD/MCU/${CRS-MCU_saved_cfg_file}
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/1/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/1/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/7/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/7/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/wav*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/recorded_list
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/wav_files
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/dejavu
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/tmp
+
+
+
+Check CRS Version
+    Directory Should Exist   ${SBCDIR}/bin
+    File Should Exist        ${SBCDIR}/bin/SBC-SBC
+    CRS.Run Command          ${CRS_REMOTE_PATH}/version
+    ${stdout}  ${stderr} =   Get Process Result  SBC   stdout=yes  stderr=yes
+    Should Be Empty          ${stderr}
+    Log Many                 ${stdout}
+

@@ -1,0 +1,89 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 cut_file_silence_change_pcma_pcma/
+${chan_num}                             1
+${qty}                                  ${2}
+${g729_rx_qty}                          ${1}
+${g729_mx_qty}                          ${1}
+
+
+*** Test Cases ***
+
+
+Cut File Silence Change Pcma Pcma
+     [Documentation]                   ITC доступен, отсылаем на порт voice rx поток g711, через секунду отсылаем поток g711 mx, видим что у нас один файл g729 mx нужной 
+     ...                               длительности(20 сек) и g729 rx нужной длительности без присутсвия тишины в файлах
+     Start MTS
+     Sleep                             10
+     Import Logs
+     Check File Count Codec Type
+     Check Duration FileSize
+     Analyzing Files
+
+
+*** Keywords ***
+
+My Setup
+    Restoring CRS-MKD-MCU-Meta-BE-Cut-Silence G729 Configs
+    Setup Path
+    Restart Voice
+    Restart ITC
+    Check RVOP Connection
+    Create folder for logs
+
+
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    sequential
+
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     @{New_PATH} =                       Split String      ${PATH}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH}[0]    ${remote_lib_host}
+     #@{New_PATH_2} =                       Split String      ${PATH_2}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     #SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH_2}[0]    ${remote_lib_host}
+
+#     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+#     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+#     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+Check Duration FileSize
+      [Documentation]                       Проверяем  размер файла и длительность
+      CRS.Check Duration Of File          g729_mx    ${chan_num}    ${20000}    ${1000}
+      CRS.Check Duration Of File          g711_rx    ${chan_num}    ${20000}    ${1000}
+
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${g729_mx_qty}
+     CRS.Check File Codec                 ${chan_num}   g729   rx    ${g729_rx_qty}
+
+Analyzing Files
+     [Documentation]                      Проверяем качество записанных файлов
+     CRS.Analyzing Files             ${50}   ${chan_num}    ${qty}
+

@@ -1,0 +1,60 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Suite Setup
+
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 CNG_g711_interleaving/
+${chan_num}                             1
+${qty}                                  ${1}
+
+*** Test Cases ***
+
+
+Comfort Noise Generation G711 Without ITC
+    [Documentation]                     ITC недоступен. Имитируем запись файла, отправлялем в рамках одной сессии G711 - 10 сек, затем CN - 2 сек, затем g711 - 10 сек, затем CN - 2 сек, затем g711 - 10 сек. Видим что записался 
+    ...                                 файл нужной длительности и качества
+    [Setup]                             Run Keywords    Restart Voice
+    Start MTS
+    Check File Count Codec Type
+    Check Duration
+    Analyzing Files
+
+
+*** Keywords ***
+
+My Suite Setup
+    Restoring CRS-MKD-MCU-Meta-BE G711 configs
+    Setup Path
+    Create folder for logs
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g711   mx    ${qty}
+
+Check Duration
+      [Documentation]                     Проверяем  размер файла и длительность
+      CRS.Check Duration Of File          g711_mx    ${chan_num}    ${34000}    ${1000}
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    sequential
+     Sleep                               3
+
+Analyzing Files
+     [Documentation]                      Проверяем качество записанных файлов
+     CRS.Analyzing Files                 ${150}   ${chan_num}    ${qty}

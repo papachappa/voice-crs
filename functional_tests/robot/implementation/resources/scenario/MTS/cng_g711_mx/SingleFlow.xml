@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+<createListenpointRTPFLOW name="cng_g711_mx" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+        <parameter name="[testcase:payloadList]" operation="set" value="[[fileWave(0)]]"/>
+        <parameter name="[payloadType_g711]" operation="set" value="8"/>
+        <parameter name="[payloadType_cng]" operation="set" value="13"/>
+        <parameter name="[bitRate]" operation="set" value="[[fileWave(2)]]"/>
+        <parameter name="[nbPacket_g711]" operation="set" value="30"/>
+
+        <sendMessageRTPFLOW listenpoint="cng_g711_mx" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+        <flow packetNumber="[nbPacket_g711]" bitRate="[bitRate]" synchronous="true" packetLost="0">
+        <!--    <flow duration="17" bitRate="[bitRate]" synchronous="true" packetLost="0"> -->
+            <header ssrc="[ssrc]" payloadType="[payloadType_g711]" seqnum="0" timestamp="0"/>
+            <payload format="binary">[payloadList]</payload>
+            </flow>
+        </sendMessageRTPFLOW>
+
+<pause 50ms>
+
+        <sendMessageRTPFLOW listenpoint="cng_g711_mx" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+        <!--    <flow packetNumber="[nbPacket]" bitRate="[bitRate]" synchronous="true" packetLost="0">  -->
+            <flow duration="17" bitRate="[bitRate]" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType_g711]" seqnum="0" timestamp="0"/>
+            <payload format="binary">[payloadList]</payload>
+            </flow>
+        </sendMessageRTPFLOW>
+
+
+<removeListenpointRTPFLOW name="cng_g711_mx" />
+</scenario>

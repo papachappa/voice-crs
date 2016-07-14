@@ -1,0 +1,66 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+${PATH}                                  changing_payload_during_call_without_ITC/
+${qty}                                   ${10}
+${chan_num}                              1
+${g729_mx_qty}                           ${5}
+${g711_mx_qty}                           ${5}
+
+*** Test Cases ***
+
+
+Changing Payload Type During Call Without ITC
+
+     [Documentation]                     Имитируем пять вызовов по 10 сек без доступного ITC, в каждом вызове меняется payload type, 
+     ...                                 проверяем количество файлов, их длительность и качество
+     Start MTS
+     Check RVOP Connection
+     Check File Count Codec Type
+     Check Duration FileSize
+     Analyzing Files
+
+
+*** Keywords ***
+
+My Setup
+      Restoring CRS-MKD-MCU-Meta-BE G711 Configs
+      Setup Path
+      Restart Voice
+
+Check RVOP Connection
+     [Documentation]                     Проверяем недоступность ITC(RVOP)
+     Sleep                               5
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/warning.log      ${0}     Resource request rejecterd
+
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}/test.xml    ${PATH}   ${1}    sequential
+     Check RVOP Connection
+     Sleep                               3
+
+Check Duration FileSize
+      [Documentation]                      Проверяем  размер файла и длительность
+      CRS.Check File Size                  ${chan_num}     ${80000}    ${82000}   ${1}    g711_mx
+      CRS.Check File Size                  ${chan_num}     ${9000}    ${11000}    ${1}    g729_mx
+      CRS.Check Duration Of File           g711_mx   ${chan_num}   ${10000}   ${1000}
+      CRS.Check Duration Of File           g729_mx   ${chan_num}   ${10000}   ${1000}
+
+
+
+Analyzing Files
+     [Documentation]                      Проверяем качество записанных файлов
+     CRS.Analyzing Files                  ${60}   ${chan_num}    ${qty}
+
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g711   mx    ${g711_mx_qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${g729_mx_qty}

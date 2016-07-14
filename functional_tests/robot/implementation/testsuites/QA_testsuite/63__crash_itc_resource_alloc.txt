@@ -1,0 +1,86 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Suite Setup
+
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 crash_itc_resource_alloc/
+${chan_num}                             1
+${qty}                                  ${2}
+
+*** Test Cases ***
+
+
+Crash ITC During Transcoding
+    [Documentation]                       Имитируем падение ITC в процессе записи, а затем проверяем записанные файлы
+    [Setup]                             Run Keywords    Restart Voice  Restart ITC
+    Check RVOP Connection
+    Start MTS
+    Sleep                               15
+    Stop ITC
+    Should resource error
+    Wait MTS Stop
+    Check File Size Before Crash ITC
+    [Teardown]                           Clean Files After Test
+
+
+Raise ITC During Recording
+    [Documentation]                       Имитируем восстановление ITC в процессе записи, а затем проверяем записанные файлы
+     [Setup]                             Restart Voice
+     Start MTS
+     Sleep                               15
+     Start ITC
+     Sleep                               5
+     Check RVOP Connection
+     Wait MTS Stop
+     Check File Size After Crash ITC
+     #[Teardown]                           Clean Files After Test
+
+
+*** Keywords ***
+My Suite Setup
+        Restoring CRS-MKD-MCU-Meta-BE-ITC G729 Configs
+        Setup Path
+        Restart BE
+        Restart Meta
+        Create folder for logs
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm
+
+
+Check File Size Before Crash ITC
+     [Documentation]                     Проверяем количество записанных файлов, качество и длительность
+     CRS.Check File Size                    ${chan_num}     ${17000}    ${23000}    ${1}    g729_mx
+     CRS.Check File Size                    ${chan_num}     ${400000}    ${500000}    ${1}    g711_mx
+
+Check File Size After Crash ITC
+     [Documentation]                     Проверяем количество записанных файлов, качество и длительность
+     CRS.Check File Size                    ${chan_num}     ${20000}    ${40000}    ${1}    g729_mx
+     CRS.Check File Size                    ${chan_num}     ${250000}    ${400000}    ${1}    g711_mx
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${0}    sequential
+     Sleep                               3
+
+Wait MTS Stop
+    Sleep                               70  # Ждем пока завершится MTS
+
+Should resource error
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/controller_warning.log     ${0}     Resource request rejecterd
+
+Clean Files After Test
+     ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+     CRS.Del Files In Folder             ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}/
+     CRS.Emptying File                   ${file}

@@ -1,0 +1,55 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         Run Keywords        Restoring CRS-MKD-MCU-Meta-BE-long-stop-timer G729 Configs  Setup Path   Restart Module
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+${PATH}                                 ggs_two_calls_with_same_from_port/
+${MTS_DIR}                              mts_log
+${chan_num}                             ${4}
+${qty}                                  ${1}
+
+*** Test Cases ***
+
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}   ${1}    sequential
+     Sleep                               3
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     @{New_PATH} =                       Split String      ${PATH}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH}[0]    ${remote_lib_host}
+
+#     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+#     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+#     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+
+
+Check Duration FileSize
+      [Documentation]                       Проверяем  размер файла и длительность
+      CRS.Check File Size                  ${chan_num}     ${9400}    ${9500}   ${1}    ${0}
+#Нужна только проверка количества
+
+Check Meta Information
+      [Documentation]                     Проверяем события вызова в мета модуле
+      ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+      CRS.Check File Contain              ${file}    ${1}    ConnectionSetup;(2)     ConnectionReleased(2);
+
+
+#Добавить сверку времени ConnectionSetup и  ConnectionReleased через API вызов(должна быть разница в 10 сек между ними)
+#Можно добавить сверку из meta trace.log sip сообщения 
+

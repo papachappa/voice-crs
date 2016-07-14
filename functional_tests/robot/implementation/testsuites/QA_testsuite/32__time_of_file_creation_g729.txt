@@ -1,0 +1,117 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup 
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${TrafficLevel}                         1
+${IterationsLimit}                      1
+${RTP_time}                             80000
+${PATH}                                 crc_with_crushed_voice_g729/
+${qty}                                  ${9}
+${chan_num}                             1
+
+*** Test Cases ***
+
+
+Check Creation Time G729 Without ITC During Voice Crash
+      [Documentation]                    Имитируем вызов, видим что файл пишется, имитируем падение Voice, видим что файл записался как 01.01.1970
+      [Setup]                         Run Keywords   Make changes In MV-SIP configs    Check Loadable Parameters In MV-SIP configs   Define folder for logs
+      Start Sending MV-SIP
+      Stopping Voice
+      Check Recording File
+      Starting Voice
+      Import Logs
+      Check File Count
+      Cheking Time Of File Creation
+
+
+
+*** Keywords ***
+
+My Setup
+      Restoring MVSIP G729 config
+      Stop Sending MVSIP RTP
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Module
+      Check Host and Port In MV-SIP configs
+      Sleep                              5
+
+Check Host and Port In MV-SIP configs
+      [Documentation]                    Проверяем правильность конфигов MV-SIP параметры Hosts and Ports
+      Sleep                              5
+
+
+
+Make changes In MV-SIP configs
+      [Documentation]                    Настраиваем конфиги MV-SIP
+
+      @{int_1} =                         CRS.Get Integer       ${MVSIP0_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+      @{int_2} =                         CRS.Get Integer       ${MVSIP1_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+
+      CRS.Replace String                 ${MVSIP0_cfg_file}         TrafficLevel = @{int_1}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         IterationsLimit = @{int_1}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         RTP_time = @{int_1}[2]            RTP_time = ${RTP_time}
+      Sleep                              1
+
+      CRS.Replace String                 ${MVSIP1_cfg_file}    TrafficLevel = @{int_2}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    IterationsLimit = @{int_2}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    RTP_time = @{int_2}[2]            RTP_time = ${RTP_time}
+      Sleep                              1
+
+
+
+Check Loadable Parameters In MV-SIP configs
+      [Documentation]                    Проверяем правильность конфигов MV-SIP нагрузочные параметры
+      Sleep                              1
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start Sending MV-SIP
+     [Documentation]                     Запускаем MV-SIP
+     Sleep                               2
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Sleep                               7
+
+
+Stopping Voice
+     [Documentation]                     Останавливаем модуль Voice и MV-SIP
+     CRS.Stop Voice                      ${qty}       ${chan_num}
+     #CRS.Run Command                     cd ${MVSIP_REMOTE_PATH}/ && ./stop_all.sh
+     Sleep                               3
+
+
+Check Recording File
+     [Documentation]                     Проверяем что остались недописанные файлы
+     CRS.Check File Contain              ${CRS_STORAGE_REMOTE_PATH}/voice/local/RecordingList.txt   0    +
+
+
+Starting Voice
+     [Documentation]                     Запускаем модуль Voice
+     CRS.Run Command                     ${CRS_REMOTE_PATH}/start
+     Sleep                               20
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     SippA.Import CRS Logs               ${CRS_REMOTE_PATH}        ${remote_lib_host}
+     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+Check File Count
+     Sleep                                30
+     CRS.Check File Count                 ${chan_num}   ${qty}
+
+
+Cheking Time Of File Creation
+     [Documentation]                     Проверяем время записанных файлов
+     CRS.Check Time Of File Creation     ${chan_num}
+

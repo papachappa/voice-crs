@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description=".." name="RTP">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[localPortRTP]" operation="set" value="26000" description="local port of the MTS host" editable="true" />
+
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
+    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host" editable="true" />
+
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+
+    <parameter name="[FlowName]" operation="set" value="mx"/>
+    <parameter name="[ssrc]" operation="set" value="1000"/>
+
+
+    <testcase name="[FlowName]_g711_part_number_[index]" state="true" number="[iterations]">      
+        <parameter name="[PayloadType]" operation="set" value="8"/>   
+        <scenario file="SingleFlow.xml" name="[FlowName]" state="true" routingName="[FlowName]"/>
+    </testcase>
+
+
+</test>

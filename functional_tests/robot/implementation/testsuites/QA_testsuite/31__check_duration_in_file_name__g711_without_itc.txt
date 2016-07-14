@@ -1,0 +1,135 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+#Test Setup         My Setup 
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${TrafficLevel}                         1
+${IterationsLimit}                      1
+${RTP_time_min}                         17000
+${RTP_time_max}                         70000
+${PATH}                                 check_duration_in_file_name__g711_without_itc/
+${qty}                                  ${3}
+${g711_mx_qty}                          ${2}
+${g711_tx_qty}                          ${1}
+${chan_num}                             1
+
+
+*** Test Cases ***
+
+Check Duration Of File G711 Without ITC Min Duration
+      [Documentation]                    Имитируем вызов минимальной длительности(17 сек), видим что файл записался, проверяем его длительность с тем что в имени файла
+      [Setup]                            Run Keywords   My Setup   Make changes In MV-SIP configs Min Dur    Check Loadable Parameters In MV-SIP configs   Define folder for logs
+      Start Sending MV-SIP
+      Sleep                              20
+      Import Logs
+      Check MV-SIP Log Files
+      Check File Count Codec Type
+      Check Duration
+
+
+Check Duration Of File G711 Without ITC Max Duration
+      [Documentation]                    Имитируем вызов большой длительности(70 сек), видим что файл записался, проверяем его длительность с тем что в имени файла
+      [Setup]                            Run Keywords   My Setup   Make changes In MV-SIP configs Max Dur   Check Loadable Parameters In MV-SIP configs   Define folder for logs
+      Start Sending MV-SIP
+      Sleep                              75
+      Import Logs
+      Check MV-SIP Log Files
+      Check File Count Codec Type
+      Check Duration
+
+
+*** Keywords ***
+
+My Setup
+      Restoring MVSIP G711 config
+      Stop Sending MVSIP RTP
+      Restoring CRS-MKD-MCU-Meta-BE G711 Configs
+      Setup Path
+      Restart Module
+      Restart ITC
+      Check Host and Port In MV-SIP configs
+      Sleep                              5
+
+
+
+
+Check Host and Port In MV-SIP configs
+      [Documentation]                    Проверяем правильность конфигов MV-SIP параметры Hosts and Ports
+      Sleep                              5
+
+
+Make changes In MV-SIP configs Min Dur
+      [Documentation]                    Настраиваем конфиги MV-SIP
+
+      @{int_1} =                         CRS.Get Integer       ${MVSIP0_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+      @{int_2} =                         CRS.Get Integer       ${MVSIP1_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+
+      CRS.Replace String                 ${MVSIP0_cfg_file}         TrafficLevel = @{int_1}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         IterationsLimit = @{int_1}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         RTP_time = @{int_1}[2]            RTP_time = ${RTP_time_min}
+      Sleep                              1
+
+      CRS.Replace String                 ${MVSIP1_cfg_file}    TrafficLevel = @{int_2}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    IterationsLimit = @{int_2}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    RTP_time = @{int_2}[2]            RTP_time = ${RTP_time_min}
+      Sleep                              1
+
+
+Make changes In MV-SIP configs Max Dur
+      [Documentation]                    Настраиваем конфиги MV-SIP
+
+      @{int_1} =                         CRS.Get Integer       ${MVSIP0_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+      @{int_2} =                         CRS.Get Integer       ${MVSIP1_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+
+      CRS.Replace String                 ${MVSIP0_cfg_file}         TrafficLevel = @{int_1}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         IterationsLimit = @{int_1}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         RTP_time = @{int_1}[2]            RTP_time = ${RTP_time_max}
+      Sleep                              1
+
+      CRS.Replace String                 ${MVSIP1_cfg_file}    TrafficLevel = @{int_2}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    IterationsLimit = @{int_2}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    RTP_time = @{int_2}[2]            RTP_time = ${RTP_time_max}
+      Sleep                              1
+
+
+
+Check Loadable Parameters In MV-SIP configs
+      [Documentation]                    Проверяем правильность конфигов MV-SIP нагрузочные параметры
+      Sleep                              1
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start Sending MV-SIP
+     [Documentation]                     Запускаем MV-SIP
+     Sleep                               2
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Sleep                               30
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     SippA.Import CRS Logs               ${CRS_REMOTE_PATH}        ${remote_lib_host}
+     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Check MV-SIP Log Files
+     [Documentation]                     Проверяем MV-SIP логи на наличие несостоявшихся вызовов
+     SippA.Check MVSIP Logs
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g711   mx    ${g711_mx_qty}
+     CRS.Check File Codec                 ${chan_num}   g711   tx    ${g711_tx_qty}
+
+Check Duration
+     [Documentation]                     Проверяем длительность записанных файлов
+     CRS.Check Duration Of File          g711    ${chan_num}    ${0}

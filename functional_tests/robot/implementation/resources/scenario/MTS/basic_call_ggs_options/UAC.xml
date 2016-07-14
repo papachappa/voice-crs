@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Related XMLSchema file: conf/schemas/scenario.xsd -->
+
+<scenario>
+
+  <parameter name="[inviteeName1]" operation="set" value="6000"/>
+  <parameter name="[100_DOMAIN_ADDR]" operation="set" value="192.168.108.26"/>
+  <parameter name="[clientName]" operation="set" value="5130"/>
+  
+  <parameter name="[localTag]" operation="string.random" value="10"/>
+  <parameter name="[newCallId]" operation="number.random" value="10000000"/>
+  <parameter name="[newCseqNumber]" operation="number.random" value="10000000"/>
+  <parameter name="[newBranchId]" operation="string.random" value="10"/>
+  
+
+<sendMessageSIP name="Send OPTIONS" destScenario="crs">
+
+
+<![CDATA[OPTIONS sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP] SIP/2.0
+To: <sip:[inviteeName1]@[100_DOMAIN_ADDR]:[remotePortSIP]>
+From: "[clientName]" <sip:[clientName]@[100_DOMAIN_ADDR]:[localPortSIP]>;tag=[localTag]
+Via: SIP/2.0/[transportResponse] [localHostSIP]:[localPortSIP];branch=z9hG4bK[newBranchId]
+Call-ID: [newCallId]
+CSeq: [newCseqNumber] OPTIONS
+Max-Forwards: 70
+Proxy-Authorization: IMS_GPRS_SCHEMA token="999"
+Allow: INVITE, ACK, BYE, CANCEL, REFER, MESSAGE, SUBSCRIBE, NOTIFY, PUBLISH
+Contact: <sip:[clientName]@[localSIP]>
+Supported: timer
+Session-Expires: 3600;refresher=uac
+Content-Length: x
+Content-Type: application/sdp
+]]>
+
+
+
+</sendMessageSIP>
+
+<receiveMessageSIP name="Wait 200 OK" request="false" type="OPTIONS" result="200">
+</receiveMessageSIP>
+
+
+
+
+</scenario>

@@ -1,0 +1,71 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Suite Setup
+
+*** Variables ***
+
+${eraser_days}                                 STORAGE_LIFE = 1
+${days_before_today}                           ${10}
+
+*** Test Cases ***
+
+
+Check That All Files Are Flushed
+    [Documentation]                     Сохраняем несколько старых записанных файлов в voice и meta(local и remote), задаем время хранения один день, видим что все файлы удалились
+    [Setup]                             Run Keywords      Create Old Test Files    Run Eraser
+    Check All Data Deleted
+    [Teardown]                          Erase Folders
+
+Check That Old Files Are Flushed And Newer Stayed
+    [Documentation]                     Сохраняем несколько старых записанных файлов и один текущего дня в voice и meta(local и remote), 
+    ...                                 задаем время хранения один день, видим что старые файлы удалились, а текущего дня остались
+    [Setup]                             Run Keywords      Create Old And New Test Files    Run Eraser
+    Check Old Data Deleted
+    [Teardown]                          Erase Folders
+
+
+Check That Garbage Files Also Deleted
+    [Documentation]                     Сохраняем несколько старых записанных файлов в voice и meta(local и remote), задаем время хранения один день, 
+    ...                                 добавляем лишних файлов в канал, видим что все файлы удалились 
+    [Setup]                             Run Keywords      Create Old Test Files   Add Some Garbage Files   Run Eraser
+    Check All Data Deleted
+    [Teardown]                          Erase Folders
+
+
+*** Keywords ***
+
+My Suite Setup
+    [Documentation]                     Задаем кол-во хранимых дней в Eraser
+    Eraser.Edit Eraser Storage Life      days=${eraser_days}
+    Erase Folders
+
+
+Erase Folders
+    [Documentation]                     Очищаем папки(каналы) с файлами
+    Eraser.Emptying Folders
+
+Create Old Test Files
+       [Documentation]                   Создаем госоловые записи и метаданные
+       Eraser.Create Test Files          ${days_before_today}
+
+Create Old And New Test Files
+       [Documentation]                   Создаем госоловые записи и метаданные
+       Eraser.Create Test Files          ${days_before_today}    ${1}
+
+Run Eraser
+       [Documentation]                   Запускаем Eraser
+       Eraser.Run Eraser
+
+
+Check All Data Deleted
+       [Documentation]                   Проверяем что все данные удалились
+       Eraser.Check All Delete
+
+
+Check Old Data Deleted
+       [Documentation]                   Проверяем что старые данные удалились, а новые остались
+       Eraser.Check Delete Except One Day
+
+Add Some Garbage Files
+        Eraser.Add Some Garbage

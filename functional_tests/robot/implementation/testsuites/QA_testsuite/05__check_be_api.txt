@@ -1,0 +1,14 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         Run Keywords       Setup Path
+#Suite Teardown      Sleep       3
+
+
+*** Test Cases ***
+
+
+Check Channel Tables
+     [Documentation]                     Выводим список каналов
+     CRS.Get Channel List
+

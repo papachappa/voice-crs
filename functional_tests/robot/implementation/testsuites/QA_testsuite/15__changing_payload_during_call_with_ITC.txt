@@ -1,0 +1,58 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+${PATH}                                  changing_payload_during_call_with_ITC/
+${qty}                                   ${10}
+${chan_num}                              1
+
+*** Test Cases ***
+
+Changing Payload Type During Call With ITC
+     [Documentation]                     Имитируем пять вызовов по 10 сек c доступным ITC, в каждом вызове меняется payload type, 
+     ...                                 проверяем количество файлов, их длительность и качество
+     Start MTS
+     Check File Count Codec Type
+     Check Duration FileSize
+     Analyzing Files
+
+
+*** Keywords ***
+
+My Setup
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Voice
+      Restart ITC
+      Check RVOP Connection
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}/test.xml    ${PATH}   ${1}    sequential
+     Sleep                               3
+
+
+Check Duration FileSize
+      [Documentation]                       Проверяем  размер файла и длительность
+      CRS.Check File Size                  ${chan_num}     ${9000}    ${11000}   ${0}
+      CRS.Check Duration Of File           g729_mx    ${chan_num}  ${10000}    ${1000}
+      CRS.Del File                          ${META_LOGS_DIR}/${chan_num}
+
+
+Analyzing Files
+     [Documentation]                      Проверяем качество записанных файлов
+     CRS.Analyzing Files                 ${60}   ${chan_num}   ${qty}
+
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${qty}
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm

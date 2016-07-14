@@ -1,0 +1,103 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup 
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+${PATH}                                 ggs_crashed_voice/
+${MTS_DIR}                              mts_log
+${chan_num}                             4
+${qty}                                  ${1}
+
+*** Test Cases ***
+
+GGS Crash Voice During Recording Voice
+       [Documentation]                   Имитируем вызов на GGS, видим запись файла в процессе, имитируем падение Voice, проверям наличие записываемых файлов в файле Recording list, 
+       ...                               стартуем Voice, видим что у записанного файла появились длительность и CRC(файл дозаписался), а также отсутствие записываемых в  
+       ...                               в Recording list
+       Start MTS
+       Stopping Voice
+       Check Unsaved File
+       Starting Voice
+       Import Logs
+       Check File Count Codec Type
+       Check CRC Duration Recording List
+       Check Meta Information
+       Analyzing Files
+       Check Meta Information
+
+
+
+*** Keywords ***
+
+My Setup
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Voice
+      Restart Meta
+      Restart ITC
+      Define folder for logs
+
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}   ${0}    sequential
+     Sleep                               10
+
+Stopping Voice
+     [Documentation]                     Останавливаем модуль Voice и MV-SIP
+     CRS.Stop Voice                      ${qty}      ${chan_num}
+     Sleep                               3
+
+Check Unsaved File
+     [Documentation]                     Проверяем что остались недописанные файлы
+     CRS.Check File Contain              ${CRS_STORAGE_REMOTE_PATH}/voice/local/RecordingList.txt    0    +
+
+
+Starting Voice
+     [Documentation]                     Запускаем модуль Voice
+     CRS.Run Command                     ${CRS_REMOTE_PATH}/start
+     Sleep                               3
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     @{New_PATH} =                       Split String      ${PATH}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH}[0]    ${remote_lib_host}
+
+#     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+#     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+#     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${qty}
+
+
+Check CRC Duration Recording List
+      [Documentation]                       Проверяем CRC, длительность файла, отсутствие RecordingList
+      CRS.Check CRC                        ${chan_num}
+      CRS.Check File Exist                 ${RecordingList_File}    0
+      CRS.Check File Size                  ${chan_num}     ${32000}    ${34000}   ${0}
+      CRS.Check Duration Of File           g729_mx    ${chan_num}   ${33000}    ${1500}
+      CRS.Del File                         ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
+
+
+Analyzing Files
+     [Documentation]                      Проверяем качество записанных файлов
+     CRS.Analyzing Files                  ${100}   ${chan_num}   ${qty}
+
+
+Check Meta Information
+      [Documentation]                     Проверяем события вызова в мета модуле
+      ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+      CRS.Check File Contain              ${file}    ${1}    ActivateConference;     DeactivateConference;

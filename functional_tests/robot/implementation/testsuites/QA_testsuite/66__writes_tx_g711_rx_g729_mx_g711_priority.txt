@@ -1,0 +1,92 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 writes_tx_g711_rx_g729_mx_g711/
+${PATH_2}                               writes_g711_mx/
+${chan_num}                             1
+${qty}                                  ${3}
+${g729_mx_qty}                          ${1}
+${g729_rx_qty}                          ${1}
+${g729_tx_qty}                          ${1}
+
+*** Test Cases ***
+
+
+
+Writing g711_tx g729_rx g711_mx
+     [Documentation]                   ITC доступен, Записываем параллельно g711_tx g729_rx и g711_mx, видим что у нас три файла, но mx записался в полном объеме, т.к
+     ...                               он приоритетней, проверяем файл mx с нужным размером и длительностью
+     Start MTS
+     Sleep                                10
+     Import Logs
+     Check File Count Codec Type
+     Check FileSize And Duration
+     #[Teardown]                           Clean Files After Test
+
+
+*** Keywords ***
+
+My Setup
+    Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+    Setup Path
+    Restart Voice
+    Restart Meta
+    Restart ITC
+    Create folder for logs
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Check RVOP Connection
+     [Documentation]                     Проверяем доступность ITC(RVOP)
+     Sleep                               8
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/trace.log      ${0}     Version Confirm
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${0}    parallel
+     Sleep                               2
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH_2}test.xml    ${PATH_2}    ${1}    sequential
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     @{New_PATH} =                       Split String      ${PATH}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH}[0]    ${remote_lib_host}
+     @{New_PATH_2} =                       Split String      ${PATH_2}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH_2}[0]    ${remote_lib_host}
+
+#     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+#     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+#     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Check FileSize And Duration
+      [Documentation]                       Проверяем  размер файлов и длительность
+      CRS.Check File Size                  ${chan_num}     ${9000}    ${11000}   ${1}    g729_mx
+      CRS.Check Duration Of File           g729_mx    ${chan_num}   ${9000}   ${1000}
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${g729_mx_qty}
+     CRS.Check File Codec                 ${chan_num}   g729   rx    ${g729_rx_qty}
+     CRS.Check File Codec                 ${chan_num}   g729   tx    ${g729_tx_qty}
+
+
+Clean Files After Test
+     ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+     CRS.Del Files In Folder             ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}/
+     CRS.Emptying File                   ${file}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+<createListenpointRTPFLOW name="performance_g723" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+    <parameter name="[payloadList]" operation="set" value="[[file_g723(0)]]"/>
+    <parameter name="[timestampList]" operation="set" value="[[file_g723(1)]]"/>
+    <parameter name="[seqList]" operation="set" value="[[file_g723(2)]]"/>
+    <parameter name="[payloadType]" operation="set" value="[[file_g723(3)]]"/>
+    <parameter name="[deltaTime]" operation="set" value="[[file_g723(4)]]"/>
+    <parameter name="[nbPacket]" operation="list.size" value="[payloadList]"/>
+
+
+    <sendMessageRTPFLOW listenpoint="performance_g723" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+          <flow packetNumber="[nbPacket]" deltaTime="[deltatime]" synchronous="true" packetLost="0">
+          <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="0" timestamp="0"/>
+          <payload format="binary">[payloadList]</payload>
+          </flow>
+    </sendMessageRTPFLOW>
+
+  <removeListenpointRTPFLOW name="performance_g723" />
+
+</scenario>
+
+
+<!--
+    <parameter name="[testcase:payloadList]" operation="set" value="[[file(0)]]"/>^M
+    <parameter name="[timestampList]" operation="set" value="[[file(1)]]"/>^M
+    <parameter name="[seqList]" operation="set" value="[[file(2)]]"/>^M
+    <parameter name="[payloadType]" operation="set" value="[[file(3)]]"/>^M
+    <parameter name="[deltaTime]" operation="set" value="[[file(4)]]"/>^M
+    <parameter name="[markList]" operation="set" value="[[file(5)]]"/>^M
+    <parameter name="[nbPacket]" operation="list.size" value="[payloadList]"/>^M
+
+    <parameter name="[ssrc]" operation="number.random" value="10000000"/>^M
+    <sendMessageRTPFLOW listenpoint="inviter" remoteHost="[remoteHostRTP(0)]" remotePort="[remotePortRTP]">^M
+      <flow duration="1.5" deltaTime="[deltaTime]">^M
+          <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="[seqList]" timestamp="[timestampList]" mark="[markList]"/>^M
+          <payload format="binary">[payloadList]</payload>^M
+      </flow>^M
+    </sendMessageRTPFLOW>^M
+-->

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description="" name="increase_timestamp_during_call_g711_with_itc">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+    <parameter name="[localPortRTP]" operation="set" value="56000" description="local port of the MTS host" editable="true" />
+
+    <parameter name="[ssrc]" operation="set" value="1000" description="ssrc"/>
+ 
+
+    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host"  editable="true" />
+
+    <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
+
+
+    <testcase name="[Flow]" state="true" number="[iterations]">
+    <parameter name="[seqnum]" operation="set" value="0"/>
+    <parameter name="[timestamp]" operation="set" value="0"/>
+        <scenario file="SingleFlow.xml" name="[Flow]" state="true" routingName="[Flow]"/>
+    </testcase>
+
+    <testcase name="[Flow_2]" state="true" number="[iterations]">
+    <parameter name="[seqnum]" operation="set" value="5500"/>
+    <parameter name="[timestamp]" operation="set" value="4573457"/>
+        <scenario file="SingleFlow.xml" name="[Flow_2]" state="true" routingName="[Flow_2]"/>
+    </testcase>
+
+
+</test>
+

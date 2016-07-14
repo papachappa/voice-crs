@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Related XMLSchema file: conf/schemas/scenario.xsd -->
+<scenario>
+
+<createListenpointRTPFLOW name="cut_file_silence_change_pcma_g729_mx" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
+
+    <parameter name="[payloadList]" operation="set" value="[[file_g729(0)]]"/>
+    <parameter name="[timestampList]" operation="set" value="[[file_g729(1)]]"/>
+    <parameter name="[seqList]" operation="set" value="[[file_g729(2)]]"/>
+    <parameter name="[payloadType]" operation="set" value="[[file_g729(3)]]"/>
+    <!-- <parameter name="[deltaTime]" operation="set" value="[[file_g729(4)]]"/> -->
+    <parameter name="[nbPacket]" operation="list.size" value="[payloadList]"/>
+    <!-- <parameter name="[nbPacket]" operation="set" value="4000"/> -->
+
+        <sendMessageRTPFLOW listenpoint="cut_file_silence_change_pcma_g729_mx" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+            <!-- <flow duration="10" bitRate="8000" synchronous="true" packetLost="0"> -->
+             <flow packetNumber="[nbPacket]" bitRate="8" synchronous="true" packetLost="0">
+            <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="[seqList]" timestamp="[timestampList]"/>
+            <payload format="binary">[payloadList]</payload>
+         </flow>
+        </sendMessageRTPFLOW>
+
+<removeListenpointRTPFLOW name="cut_file_silence_change_pcma_g729_mx" />
+
+</scenario>
+
+
+

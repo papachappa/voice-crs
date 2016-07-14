@@ -1,0 +1,108 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup 
+
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${TrafficLevel}                         1    # При вычислении количества вызовов умножаем на 2 если запускаем 2 копии MVSIP. (20*10000)*2 - кол-во одновр вызовов
+${IterationsLimit}                      10
+${RTP_time}                             10000
+${chan_num}                             1
+
+*** Test Cases ***
+
+Perfomance Ttest Sending G729
+      [Documentation]                    Имитируем массовые вызовы G729, проверяем нужное количество файлов и их качетсво
+      [Setup]                            Run Keywords   Make changes In MV-SIP configs    Check Loadable Parameters In MV-SIP configs   Define folder for logs
+      Start Sending MV-SIP
+      Import Logs
+      Check MV-SIP Log Files
+      Analyzing Files G729
+
+
+*** Keywords ***
+
+
+My Setup
+      Restoring MVSIP G729 config
+      Stop Sending MVSIP RTP
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Module
+      Clear MTS Log
+      Сheck Host and Port In MV-SIP configs
+      Sleep                              5
+
+
+Check Host and Port In MV-SIP configs
+      [Documentation]                    Проверяем правильность конфигов MV-SIP параметры Hosts and Ports
+      Sleep                              5
+
+
+Make changes In MV-SIP configs
+      [Documentation]                    Настраиваем конфиги MV-SIP
+
+      @{int_1} =                         CRS.Get Integer       ${MVSIP0_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+      @{int_2} =                         CRS.Get Integer       ${MVSIP1_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+#      @{int_3} =                         SBC.Get Integer       ${MVSIP2_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+#      @{int_4} =                         SBC.Get Integer       ${MVSIP3_cfg_file}     TrafficLevel =    IterationsLimit =    RTP_time =
+
+      CRS.Replace String                 ${MVSIP0_cfg_file}         TrafficLevel = @{int_1}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         IterationsLimit = @{int_1}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP0_cfg_file}         RTP_time = @{int_1}[2]            RTP_time = ${RTP_time}
+      Sleep                              1
+
+      CRS.Replace String                 ${MVSIP1_cfg_file}    TrafficLevel = @{int_2}[0]        TrafficLevel = ${TrafficLevel}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    IterationsLimit = @{int_2}[1]     IterationsLimit = ${IterationsLimit}
+      CRS.Replace String                 ${MVSIP1_cfg_file}    RTP_time = @{int_2}[2]            RTP_time = ${RTP_time}
+      Sleep                              1
+
+#      CRS.Replace String                 ${MVSIP2_cfg_file}    TrafficLevel = @{int_3}[0]        TrafficLevel = ${TrafficLevel}
+#      CRS.Replace String                 ${MVSIP2_cfg_file}    IterationsLimit = @{int_3}[1]     IterationsLimit = ${IterationsLimit}
+#      CRS.Replace String                 ${MVSIP2_cfg_file}    RTP_time = @{int_3}[2]            RTP_time = ${RTP_time}
+#      Sleep                              1
+#
+#      CRS.Replace String                 ${MVSIP3_cfg_file}    TrafficLevel = @{int_4}[0]        TrafficLevel = ${TrafficLevel}
+#      CRS.Replace String                 ${MVSIP3_cfg_file}    IterationsLimit = @{int_4}[1]     IterationsLimit = ${IterationsLimit}
+#      CRS.Replace String                 ${MVSIP3_cfg_file}    RTP_time = @{int_4}[2]            RTP_time = ${RTP_time}
+#      Sleep                              1
+
+
+Check Loadable Parameters In MV-SIP configs
+      [Documentation]                    Проверяем правильность конфигов MV-SIP нагрузочные параметры
+      Sleep                              1
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/perfomance_g729
+
+Start Sending MV-SIP
+     [Documentation]                     Запускаем MV-SIP
+     Sleep                               2
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Sleep                               40
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     SippA.Import CRS Logs               ${CRS_REMOTE_PATH}        ${remote_lib_host}
+     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Check MV-SIP Log Files
+     [Documentation]                     Проверяем MV-SIP логи на наличие несостоявшихся вызовов
+     SippA.Check MVSIP Logs
+
+Analyzing Files G729
+     [Documentation]                     Проверяем качество записанных файлов
+     ${qty}=                             Evaluate     ${IterationsLimit} * 5
+     CRS.Analyzing Files G729            ${140}    ${chan_num}  #кол-во итераций умножаем на 4
+
+

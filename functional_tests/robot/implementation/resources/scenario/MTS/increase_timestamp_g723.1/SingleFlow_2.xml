@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+
+<createListenpointRTPFLOW name="performance_g723_2" localHost="[localHostRTP]" localPort="[localPortRTP_2]"/>
+
+    <parameter name="[payloadList]" operation="set" value="[[file_g723(0)]]"/>
+    <parameter name="[timestampList]" operation="set" value="[[file_g723(1)]]"/>
+    <parameter name="[seqList]" operation="set" value="[[file_g723(2)]]"/>
+    <parameter name="[payloadType]" operation="set" value="[[file_g723(3)]]"/>
+    <parameter name="[deltaTime]" operation="set" value="[[file_g723(4)]]"/>
+    <parameter name="[nbPacket]" operation="list.size" value="[payloadList]"/>
+
+    <sendMessageRTPFLOW listenpoint="performance_g723_2" remoteHost="[remoteHostRTP]" remotePort="[remotePortRTP]">
+          <flow packetNumber="[nbPacket]" deltaTime="30" synchronous="true" packetLost="0" deltaTimestamp="240">
+          <header ssrc="[ssrc]" payloadType="[payloadType]" seqnum="781" timestamp="200000000"/>
+          <payload format="binary">[payloadList]</payload>
+          </flow>
+    </sendMessageRTPFLOW>
+
+<removeListenpointRTPFLOW name="performance_g723_2" />
+
+</scenario>

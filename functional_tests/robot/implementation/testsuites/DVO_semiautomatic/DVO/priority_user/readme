@@ -1,0 +1,15 @@
+Должен быть установлен PriorityUser = 1 для вызывающего абонента
+Должен быть установлен call_waiting = 1 и режим cw - psscc для абонентов ожидающих вызова по 2 линии
+В данном случае на cw на 5000000 (А - 5000000, Б - 6000000, В - 6000001)
+Также выключить проксирование DTMF в /usr/protei/Protei-MKD/MKD/profiles.vpbx/2/routing_data/dev_properties/@addon.script
+node Device
+{
+  table Setup( "PN", "Sg_HostPort" )
+  {
+
+    default
+      addparam( "DTMF_ProxyCgPN",    "0" );       #Вот здесь в ноль
+      addparam( "Use_OST",           "1" );
+      return;
+  };
+};

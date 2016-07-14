@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description=".." name="RTP">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[localPortRTP]" operation="set" value="26000" description="local port of the MTS host" editable="true" />
+    <parameter name="[localPortRTP2]" operation="set" value="27000" description="local port of the MTS host" editable="true" />
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
+    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host" editable="true" />
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+    <parameter name="[ssrc]" operation="set" value="1000"/>
+
+    <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
+    <parameter name="file_g729" operation="file.readmedia" value="g729.right.pdml"/>
+
+
+    <for index="[index]" from="00" to="04" step="1">
+
+    <testcase name="FlowName_g729_[index]" state="true" number="[iterations]">      
+        <parameter name="[localPortRTP]" operation="number.add" value="[localPortRTP2]" value2="[index]"/>
+        <parameter name="[FlowName_g729]" operation="set" value="[FlowName_g729]_[index]"/>
+        <scenario file="SingleFlow_g729.xml" name="FlowName_g729" state="true" routingName="FlowName_g729"/>
+    </testcase>
+
+
+    <testcase name="FlowName_g711_[index]" state="true" number="[iterations]">      
+        <parameter name="[localPortRTP]" operation="number.add" value="[localPortRTP]" value2="[index]"/>
+        <parameter name="[FlowName_g711]" operation="set" value="[FlowName_g711]_[index]"/>
+        <scenario file="SingleFlow_g711.xml" name="FlowName_g711" state="true" routingName="FlowName_g711"/>
+    </testcase>
+
+    </for>
+
+</test>

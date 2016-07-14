@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description="" name="writes_tx_rx_g729_mx_g711">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+    <parameter name="[localPortRTP]" operation="set" value="26001" description="local port of the MTS host" editable="true" />
+    <parameter name="[localPortRTP_2]" operation="set" value="26002" description="local port of the MTS host" editable="true" />
+
+    <parameter name="[ssrc]" operation="set" value="1000"/>
+
+    <parameter name="file" operation="file.readmedia" value="g729.right.pdml"/>
+
+    <testcase name="writes_tx_rx_g729_mx_g711_1" state="true" number="[iterations]">
+        <parameter name="[localPortRTP_2]" operation="set" value="26002" description="local port of the MTS host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="16602" description="remote port of the SUT host" editable="true" />
+        <scenario file="SingleFlow_1.xml" name="writes_tx_rx_g729_mx_g711_1" state="true" routingName="writes_tx_rx_g729_mx_g711_1"/>
+    </testcase>
+
+    <testcase name="writes_tx_rx_g729_mx_g711_2" state="true" number="[iterations]">
+        <parameter name="[localPortRTP]" operation="set" value="26001" description="local port of the MTS host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="16601" description="remote port of the SUT host" editable="true" />
+        <scenario file="SingleFlow_2.xml" name="writes_tx_rx_g729_mx_g711_2" state="true" routingName="writes_tx_rx_g729_mx_g711_2"/>
+    </testcase>
+
+
+</test>

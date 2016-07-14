@@ -1,0 +1,123 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup        My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+${PATH}                                 ggs_with_double_audio/
+${MTS_DIR}                              mts_log
+${chan_num}                             ${4}
+${qty}                                  ${1}
+
+*** Test Cases ***
+
+
+GGS With Double Audio
+      [Documentation]                   Имитируем вызов с двумя портами аудио, выбираем первый, второй выключаем пишем в файл то что в первом
+      Start MTS
+      Import Logs
+      Check Duration FileSize
+      Check File Count Codec Type
+      Analyzing Files
+      Check Meta Information
+      Check Meta Logs
+      Check SIP And Meta
+
+
+*** Keywords ***
+
+My Setup
+
+      Restoring CRS-MKD-MCU-Meta-BE G729 Configs
+      Setup Path
+      Restart Voice
+      Restart Meta
+      Restart ITC
+      Define folder for logs
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     Sleep                               1
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}   ${1}    sequential
+     Sleep                               3
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     @{New_PATH} =                       Split String      ${PATH}    /
+     #LOG TO CONSOLE                      @{New_PATH}[0]
+     SippA.Import MTS Logs               ${MTS_REMOTE_LOG_PATH}        @{New_PATH}[0]    ${remote_lib_host}
+
+#     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+#     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+#     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+#     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Check Duration FileSize
+      [Documentation]                       Проверяем  размер файла и длительность
+      CRS.Check File Size                  ${chan_num}     ${9000}    ${10500}   ${0}
+      CRS.Check Duration Of File           g729_mx    ${chan_num}   ${9000}    ${1000}
+      CRS.Del File                          ${META_LOGS_DIR}/${chan_num}
+
+
+Analyzing Files
+     [Documentation]                      Проверяем качество записанных файлов
+     CRS.Analyzing Files                  ${60}   ${chan_num}    ${qty}
+
+
+Check Meta Information
+      [Documentation]                     Проверяем события вызова в мета модуле
+      ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
+      Set Suite Variable                  ${file}
+      CRS.Check File Contain              ${file}    ${1}    ActivateConference;     DeactivateConference;
+
+
+Check Meta Logs
+#      [Arguments]                         ${end}
+      [Documentation]                     Проверяем SIP сообщения в мета логах
+      CRS.Find Text Block                 ${CRS_META_REMOTE_PATH}/logs/trace.log    SIP/2.0 200 OK    Via: SIP/2.0/UDP     m=application 0 udp
+
+
+Check SIP And Meta
+      [Documentation]                     Проверяем соответствие времени установления SIP сообщений и время в мета логах
+      CRS.Check Event Time                ${CRS_META_REMOTE_PATH}/logs/sip_transport.log     ${file}    SIP/2.0 200 OK     ActivateConference
+      CRS.Check Event Time                ${CRS_META_REMOTE_PATH}/logs/sip_transport.log     ${file}    BYE sip     DeactivateConference
+
+Check File Count Codec Type
+     CRS.Check File Count                 ${chan_num}   ${qty}
+     CRS.Check File Codec                 ${chan_num}   g729   mx    ${qty}
+
+
+
+#Добавить сверку времени ConnectionSetup и  ConnectionReleased через API вызов(должна быть разница в 10 сек между ними)
+#Можно добавить сверку из meta trace.log sip сообщения 
+
+#Ответ на двойной media 
+
+
+# SIP/2.0 200 OK
+# Via: SIP/2.0/UDP 192.168.108.26:15500;received=192.168.108.26;branch=z9hG4bKd2fb9AVCUY
+# To: <sip:6000@192.168.108.26:5061>;tag=146399437500000001
+# From: <sip:5130@192.168.108.26:15500>;tag=N62s0Ps7yL
+# Contact: <sip:6000@192.168.108.26:5061>
+# Call-ID: 04722503
+# CSeq: 1 INVITE
+# Content-Type: application/sdp
+# Content-Length: 168
+# Allow: INVITE,CANCEL,ACK,BYE,INFO,PRACK,UPDATE,NOTIFY,MESSAGE,REFER,OPTIONS
+
+# v=0
+# o=crs 2707657617 2707657617 IN IP4 192.168.108.26
+# c=IN IP4 192.168.108.26
+# t=0 0
+# m=audio 17600 RTP/AVP 8 18
+# a=recvonly
+# m=audio 0 RTP/AVP
+# m=application 0 udp
