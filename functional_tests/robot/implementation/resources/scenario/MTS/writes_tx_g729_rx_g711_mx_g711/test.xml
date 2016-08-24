@@ -9,18 +9,36 @@
     <parameter name="[localPortRTP]" operation="set" value="26001" description="local port of the MTS host" editable="true" />
     <parameter name="[localPortRTP_2]" operation="set" value="26002" description="local port of the MTS host" editable="true" />
 
+   <parameter name="[retransmitTimers(0)]" operation="set" value="500"/>
+    <parameter name="[retransmitTimers(1)]" operation="set" value="1000"/>
+    <parameter name="[retransmitTimers(2)]" operation="set" value="2000"/>
+    <parameter name="[retransmitTimers(3)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(4)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(5)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(6)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(7)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(8)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(9)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(10)]" operation="set" value="4000"/>
+
+
     <parameter name="file_g729" operation="file.readmedia" value="g729.right.pdml"/>
     <parameter name="file_g711" operation="file.readwave" value="g711.sample.wav" value2="20"/>
 
+  <runProfile>
+      <start delay="1"/>
+      <step time="0" frequency="100"/>
+  </runProfile>
+
     <testcase name="writes_tx_g729_rx_g711_mx_g711_1" state="true" number="[iterations]">
         <parameter name="[localPortRTP]" operation="set" value="26001" description="local port of the MTS host" editable="true" />
-        <parameter name="[remotePortRTP]" operation="set" value="16601" description="remote port of the SUT host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="19601" description="remote port of the SUT host" editable="true" />
         <scenario file="SingleFlow_rx_g711.xml" name="writes_tx_g729_rx_g711_mx_g711_1" state="true" routingName="writes_tx_g729_rx_g711_mx_g711_1"/>
     </testcase>
 
     <testcase name="writes_tx_g729_rx_g711_mx_g711_2" state="true" number="[iterations]">
         <parameter name="[localPortRTP_2]" operation="set" value="26002" description="local port of the MTS host" editable="true" />
-        <parameter name="[remotePortRTP]" operation="set" value="16602" description="remote port of the SUT host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="19602" description="remote port of the SUT host" editable="true" />
         <scenario file="SingleFlow_tx_g729.xml" name="writes_tx_g729_rx_g711_mx_g711_2" state="true" routingName="writes_tx_g729_rx_g711_mx_g711_2"/>
     </testcase>
 

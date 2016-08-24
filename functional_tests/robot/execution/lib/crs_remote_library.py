@@ -6,6 +6,8 @@
 crs-Remote library
 """
 
+import regex as re
+import chardet
 import fileinput
 import wave
 import contextlib
@@ -20,18 +22,65 @@ import datetime
 from subprocess import Popen, PIPE
 import subprocess
 import shlex
-import re
+#import re
 import sys
-import fileinput
 import logging
 import errno
-from collections import Counter
-from StringIO import StringIO    
+from StringIO import StringIO
 from timeout import timeout
-from KillProcess import KillProcess
+from KillProcess import KillProcess, KillJava
 
 logger = logging.getLogger('crsRemoteLibrary')
-logging.basicConfig(format='%(levelname)s - %(message)s', level = logging.DEBUG)
+logging.basicConfig(format='%(levelname)s - %(message)s', level=logging.DEBUG)
+kpv_file_size = 980
+
+def get_multi_storage_dir(conf_file="/usr/protei/Protei-CRS/Voice/config/Voice.cfg"):
+
+         m = re.compile('(?im)BaseDirectory(?:\s)*=(?:\s)*{(?:(?:\s)*(".*")(?:\s)*;(?:\s)*)+(?:\s)*};')
+         content = ""
+         storage_list = []
+
+         with open(conf_file, 'r') as inF:
+             for line in inF:
+                 content = content + line.strip()
+         state = re.findall(m, content)
+         state = state[0].split('"')
+         for i in state:
+             if ";" not in i and i:
+                storage_list.append(i)
+         #print storage_list
+         return storage_list
+# Optional
+#         mod_list = []
+#         for i in storage_list:
+#              i = i + "voice/local"
+#              mod_list.append(i)
+#         print mod_list
+####
+
+#         for i in mod_list:
+#             for dirpath, dirs, files in os.walk(i):
+#                 if files:
+#                    print i, "Not Empty"
+
+
+
+
+def get_storage_dir(conf_file="/usr/protei/Protei-CRS/Voice/config/Voice.cfg"):
+#        m = re.compile('(?im)BaseDirectories(?:\s)*=(?:\s)*{\n(?:(?:\s)*"(.*)"(?:\s)*;(?:\s)*\n)+(?:\s)*};')
+        datafile = file(conf_file)
+        datafile.seek(0)
+        s = datafile.read()
+        # print s
+###        matches = re.findall('(?im)BaseDirectories(?:\s)*=(?:\s)*{\n(?:(?:\s)*"(.*)"(?:\s)*;(?:\s)*\n)+(?:\s)*};', s, overlapped=True)
+        try:
+           matches = re.findall('(?im)BaseDirectory="(.*)"', s)
+           matches = os.path.split(matches[0])
+           matches = os.path.split(matches[0])[0]
+        except:
+           get_multi_storage_dir()
+        return matches
+
 
 class ContinuableError(AssertionError):
     """
@@ -45,9 +94,11 @@ class crsRemoteLibrary(object):
         for var in vars:
             var = int(var)
         return vars
-    
-    def setup_crs_path(self, remote_mkd_dir='/usr/protei/Protei-MKD/MKD', remote_crs_dir='/usr/protei/Protei-CRS', remote_crs_be_dir='/usr/protei/Protei-CRS-BE', 
-                             remote_crs_meta_dir='/usr/protei/Protei-CRS-Meta', remote_crs_storage_dir='/usr/protei/Protei-CRS-Storage', remote_mcu_dir='/usr/protei/Protei-MKD/MCU',
+
+
+
+    def setup_crs_path(self, remote_mkd_dir='/usr/protei/Protei-MKD/MKD', remote_crs_dir='/usr/protei/Protei-CRS/Voice', remote_crs_be_dir='/usr/protei/Protei-CRS/BE',
+                             remote_crs_meta_dir='/usr/protei/Protei-CRS/Meta', remote_crs_storage_dir=get_storage_dir(), remote_mcu_dir='/usr/protei/Protei-MKD/MCU',
                              remote_mvsip_dir='/usr/protei/Protei-MV.SIP'):
         """
         Функция установки значений переменных окружения
@@ -82,19 +133,19 @@ class crsRemoteLibrary(object):
         path = ""
 
         if module == 'crs':
-           path = os.path.abspath("%s/restart" % self.crs_dir)
+           path = os.path.abspath("%s/restart -f" % self.crs_dir)
 
         if module == 'crs_be':
-           path = os.path.abspath("%s/restart" % self.crs_be_dir)
+           path = os.path.abspath("%s/restart -f" % self.crs_be_dir)
 
         if module == 'crs_meta':
-           path = os.path.abspath("%s/restart" % self.crs_meta_dir)
+           path = os.path.abspath("%s/restart -f" % self.crs_meta_dir)
 
         if module == 'mcu':
-           path = os.path.abspath("%s/restart" % self.mcu_dir)
+           path = os.path.abspath("%s/restart -f" % self.mcu_dir)
 
         if module == 'mkd':
-           path = os.path.abspath("%s/restart" % self.mkd_dir)
+           path = os.path.abspath("%s/restart -f" % self.mkd_dir)
 
         print "*INFO* Module name IS %s" % module
         print "*INFO* Path IS %s" % path
@@ -142,19 +193,20 @@ class crsRemoteLibrary(object):
     def check_log_is_writing(self, file_f):
           log = '{0}/logs/{1}'.format(self.crs_dir, file_f)
           print log
-          while True:
-           stat1 = os.stat(log).st_mtime
-           time.sleep(30)
-           stat2 = os.stat(log).st_mtime
-           if stat1 == stat2:
-             break
-           else:
-             time.sleep(20)
+          if os.stat(log).st_size != True:
+             while True:
+              stat1 = os.stat(log).st_mtime
+              time.sleep(25)
+              stat2 = os.stat(log).st_mtime
+              if stat1 == stat2:
+                 break
+              else:
+                 time.sleep(20)
 
 
     def analyzing_files(self, quality, channel_id, file_quantity):
 
-          self.check_log_is_writing("file_trace.log")
+          self.check_log_is_writing("file_info.log")
           g711 = ".*g711.*"
           g729 = ".*g729.*"
           g723 = ".*g723.*"
@@ -234,114 +286,26 @@ class crsRemoteLibrary(object):
              raise AssertionError("*ERROR* There is a bad quality tracks" )
 
 
-    # def get_channel_list(self):
-    #       channel = "\"ChannelID\" : 1,"
-    #       descr = "\"Description\" : \"ATS channel\","
-    #       status = "\"Status\" : \"OK\""
-    #       s = subprocess.Popen(["curl", "--digest", "-u", "support:elephant", "http://192.168.108.26:8087/channels"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #       returncode = s.wait()
-    #       print('CURL returned {0}'.format(returncode))
-    #       outputlines = filter(lambda x:len(x)>0,(line.strip() for line in s.stdout))
+    def get_channel_list(self):
+           channel = "\"ChannelID\" : 1,"
+           descr = "\"Description\" : \"ATS channel\","
+           status = "\"Status\" : \"OK\""
+           s = subprocess.Popen(["curl", "--digest", "-u", "support:elephant", "http://192.168.108.26:8095/channels"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+           returncode = s.wait()
+           print('CURL returned {0}'.format(returncode))
+           outputlines = filter(lambda x:len(x)>0,(line.strip() for line in s.stdout))
 
-    #       if channel and descr and status in outputlines:
-    #          print "*INFO* Query with right parameters!"
-    #       else:
-    #          raise AssertionError("*ERROR* Problems with query!")
+           if channel and descr and status in outputlines:
+              print "*INFO* BE API works!"
+           else:
+              raise AssertionError("*ERROR* BE API Doesn't work!")
 
-
-    # def user_list(self):
-    #       role_admin = "\"Role\" : \"ADMIN\""
-    #       role_operator = "\"Role\" : \"OPERATOR\""
-
-    #       user_id_root = "\"UserID\" : \"root\""
-    #       user_id_operator = "\"UserID\" : \"support\""
-    #       status = "\"Status\" : \"OK\""
-    #       denial_status = "\"Status\" : \"ACCESS_DENIED\""
-    #       s = subprocess.Popen(["curl", "--digest", "-u", "root:elephant", "http://192.168.108.26:8087/users"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #       returncode = s.wait()
-    #       print('CURL returned {0}'.format(returncode))
-    #       outputlines = filter(lambda x:len(x)>0,(line.strip() for line in s.stdout))
-
-    #       if role_admin and role_operator and user_id_root and user_id_operator and status in outputlines:
-    #          print "*INFO* Query with right parameters!"
-    #       else:
-    #          raise AssertionError("*ERROR* Problems with query!")
-
-    #       s = subprocess.Popen(["curl", "--digest", "-u", "support:elephant", "http://192.168.108.26:8087/users"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #       returncode = s.wait()
-    #       print('CURL returned {0}'.format(returncode))
-    #       outputlines = filter(lambda x:len(x)>0,(line.strip() for line in s.stdout))
-
-    #       if denial_status in  outputlines:
-    #          print "*INFO* Query with right mandate parameters!"
-    #       else:
-    #          raise AssertionError("*ERROR* Problems with user rights!")
-
-
-    # def get_voice_file(self, records_qty, channel_id):
-    #       self.check_log_is_writing("file_trace.log")
-    #       file_f = open('{0}/voice/local/recorded_list'.format(self.crs_storage_dir), "w")
-
-    #       s = subprocess.Popen((["find", "{0}/voice/local/{1}".format(self.crs_storage_dir, channel_id), "-type", "f"]), stdout=file_f)
-    #       returncode = s.wait()
-    #       print('find returned {0}'.format(returncode))
-    #       file_f.flush()
-    #       file_f.close()
-
-    #       s = subprocess.Popen(["sed", "-i", "$ d", "{0}/voice/local/recorded_list".format(self.crs_storage_dir)])
-    #       returncode = s.wait()
-    #       print('sed returned {0}'.format(returncode))
-
-    #       file_f = '{0}/voice/local/recorded_list'.format(self.crs_storage_dir)
-
-
-    #       # check for recorded files.
-    #       p1 = subprocess.Popen(["cat", "{0}".format(file_f)], stdout=PIPE)
-    #       p2 = subprocess.Popen(["wc", "-l"], stdin=p1.stdout, stdout=subprocess.PIPE)
-
-    #       p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-    #       output = p2.communicate()[0]
-
-    #       output = int(output.strip())
-    #       records_qty = int(records_qty)
-    #       print output
-    #       print records_qty
-    #       print "*INFO* Number of recorded files is {0}".format(output)
-
-    #       if records_qty != output:
-    #          raise AssertionError("*ERROR* Quantity of files does not match expected" )
-
-
-    #       # cut subfolder in path
-    #       os.chdir("{0}/voice/local".format(self.crs_storage_dir))
-    #       f = "{0}/voice/local/tmp".format(self.crs_storage_dir)
-    #       f = open("{0}/voice/local/tmp".format(self.crs_storage_dir), "w")
-    #       p1 = subprocess.Popen(["cat", "recorded_list"], stdout=PIPE)
-    #       p2 = subprocess.Popen(["cut", "-c44-"], stdin=p1.stdout, stdout=f)
-    #       p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-    #       output = p2.communicate()[0]
-    #       f.close()
-
-    #       f = "{0}/voice/local/tmp".format(self.crs_storage_dir)
-    #       with open(f, 'r') as rec_list:
-    #         for line in rec_list:
-    #              #s = subprocess.Popen(["curl", "--digest", "-u", "support:elephant", "http://192.168.108.26:8087/voice?file={0}".format(line.strip())], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #              p1 = subprocess.Popen(["curl", "-v", "-s", "--digest", "-u", "support:elephant", "http://192.168.108.26:8087/voice?file={0}".format(line.strip()), "-o", "/dev/null"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    #              p2 = subprocess.Popen(["grep", "Content-Length:"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    #              p3 = subprocess.Popen(["sed",  "-n", "1!p"], stdin=p2.stdout, stdout=subprocess.PIPE)
-    #              p4 = subprocess.Popen(["awk", "{print $3}"], stdin=p3.stdout, stdout=subprocess.PIPE)
-
-    #              output = int(p4.communicate()[0].strip())
-    #              print output
-
-    #              if output < 1000:
-    #                 raise AssertionError("*ERROR* Error in query or file does not exist!")
-    #       print "All files was saved and retrieved successfully"
 
 
     def get_mv_sip_rtp_time(self, mvsip_file):
         rtp_time = ""
         patt = '([0-9]+..[0-9]+..[0-9]+..[0-9]+).*RTP_AUDIO: Play during'
+        #patt = '(.?[0-9]+\..?[0-9]+\..?[0-9]+\.[0-9]+).*RTP_AUDIO: Play during'
         with open(mvsip_file, 'r') as inF:
              for line in inF:
                if re.search(patt,line):
@@ -358,9 +322,11 @@ class crsRemoteLibrary(object):
         return rtp_time
 
 
+
     def ts_of_a_record_beginning(self,mvsip_file):
-          #curl --digest -u root:elephant 'http://192.168.108.26:8087/search?ts_begin=2016-05-05&ts_end=2016-05-06&number=5000000'
-          #self.check_log_is_writing("file_trace.log")
+          #curl --digest -u root:elephant 'http://192.168.108.26:8095/search?ts_begin=2016-05-05&ts_end=2016-05-06&number=5000000'
+          self.check_log_is_writing("file_info.log")
+          rectified_list = []
           mvsip_rtp_time = self.get_mv_sip_rtp_time(mvsip_file)
           format = '%H:%M:%S'
           now = datetime.datetime.now()
@@ -369,16 +335,30 @@ class crsRemoteLibrary(object):
           ts_end = ts_end.strftime("%Y-%m-%d")
           print "Current day time beginning %s" % ts_begin
           print "Current day time ending %s" % ts_end
-          s = subprocess.Popen(["curl", "--digest", "-u", "root:elephant", "http://192.168.108.26:8087/search?channels=1&ts_begin={0}&ts_end={1}&number=5000000".format(ts_begin, ts_end)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          s = subprocess.Popen(["curl", "--digest", "-u", "root:elephant", "http://192.168.108.26:8095/search?channels=1&ts_begin={0}&ts_end={1}&number=5000000".format(ts_begin, ts_end)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
           returncode = s.wait()
           print('CURL returned {0}'.format(returncode))
+          #for line in s.stdout:
+          #     print line
           outputlines = filter(lambda x:len(x)>25,(line.strip() for line in s.stdout))
+          #outputlines = outputlines.decode('cp1251').encode('utf-8')
           print "CURL returned %s" % outputlines
           #print("\n".join(outputlines))
-
-          ts_begin = outputlines[0][19:27]
+          #for item in outputlines:
+              #item = item.decode("cp1251")
+              #item = unicode(item, "utf-8")
+              #encoded_utf8_list.append(item)
+              #encoding = chardet.detect(item)
+              #encoding = encoding['encoding']
+              #print encoding
+          #print "======================="
+          #print encoded_utf8_list
+          rectified_list =  [ x for x in outputlines if "Name" not in x ]
+          rectified_list =  [ x for x in rectified_list if "Path" not in x ]
+          print "*INFO* List without names %s" % rectified_list
+          ts_begin = rectified_list[0][19:27]
           print "*INFO* Timestamp of beginning record %s" % ts_begin
-          ts_end =  outputlines[5][19:27]
+          ts_end =  rectified_list[3][19:27]
           print "*INFO* Timestamp of ending record %s" % ts_end
           print "*INFO* MV-SIP RTP Start Record Time %s" % mvsip_rtp_time
           delta = datetime.datetime.strptime(ts_end, format) - datetime.datetime.strptime(ts_begin, format)
@@ -415,6 +395,9 @@ class crsRemoteLibrary(object):
     @timeout(240, os.strerror(errno.ETIMEDOUT))
     def run_mts(self, mts_path, mts_test_file_path, logs_path, wait_flag, mode):
         #/var/mts/bin/startCmd.sh /var/mts/testsuites/writes_tx_rx_mx_g729/test.xml -seq -levelLog:DEBUG -stor:file -config:logs.STORAGE_DIRECTORY+../logs/writes_tx_rx_mx_g729/
+
+        KillProcess("startCmd.sh", "startClass.sh")
+        KillJava()
         wait_flag = int(wait_flag)
         mts_exec_command = mts_path + "/startCmd.sh "
         os.chdir(mts_path)
@@ -424,11 +407,11 @@ class crsRemoteLibrary(object):
            mts_mode = " -par"
         else: 
            mts_mode = " -seq"
-        mts_log_level = " -levelLog:DEBUG"
+        mts_log_level = " -levelLog:ERROR"
         mts_storage = " -stor:file"
-        mts_gen_report = " -gen:true"
-        mts_show_report = " -show:true"
-        mts_command = mts_exec_command + mts_test_file_path + mts_mode + mts_log_level + mts_storage + mts_gen_report + mts_show_report
+        # mts_gen_report = " -gen:true"
+        # mts_show_report = " -show:true"
+        mts_command = mts_exec_command + mts_test_file_path + mts_mode + mts_log_level + mts_storage      # + mts_gen_report + mts_show_report
         args = shlex.split(mts_command)
         self.mts_subprocess = Popen(["/bin/bash", "-c", "{0}".format(mts_command)], shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         if wait_flag == 1:
@@ -455,7 +438,7 @@ class crsRemoteLibrary(object):
 
 
     def gen_channel_stat(self, channel_id):
-        #self.check_log_is_writing("file_trace.log")
+        self.check_log_is_writing("file_info.log")
         file_f = '{0}/voice/local/recorded_list'.format(self.crs_storage_dir)
         self.find_voice_files(self.crs_storage_dir, file_f, channel_id)
 
@@ -534,7 +517,7 @@ class crsRemoteLibrary(object):
 
 
     def check_duration_of_file(self, codec_type, channel_id, expected_dur, relative_sec=0):
-        self.check_log_is_writing("file_trace.log")
+        self.check_log_is_writing("file_info.log")
         g711 = ".*g711.*"
         g729 = ".*g729.*"
         g723 = ".*g723.*"
@@ -645,8 +628,7 @@ class crsRemoteLibrary(object):
 
     def check_file_size(self, channel_id, min_file_size, max_file_size, file_mark, *words):
 
-        kpv_file_size = 980
-        self.check_log_is_writing("file_trace.log")
+        self.check_log_is_writing("file_info.log")
         file_f = '{0}/voice/local/recorded_list'.format(self.crs_storage_dir)
         self.find_voice_files(self.crs_storage_dir, file_f, channel_id)
 
@@ -682,7 +664,7 @@ class crsRemoteLibrary(object):
 
     def check_file_size_part(self, channel_id, min_file_size, max_file_size, file_part, *words):
 #если кодек и тип одинаковы, но разная длительность
-          self.check_log_is_writing("file_trace.log")
+          self.check_log_is_writing("file_info.log")
           file_f = '{0}/voice/local/recorded_list'.format(self.crs_storage_dir)
           self.find_voice_files(self.crs_storage_dir, file_f, channel_id)
 
@@ -786,13 +768,13 @@ class crsRemoteLibrary(object):
     def stop_voice(self, num_count, channel_id):
         #self.monitor_file_is_not_empty(num_count, channel_id)
         time.sleep(30)
-        self.run_command("{0}/stop".format(self.crs_dir))
+        self.run_command("{0}/stop -f".format(self.crs_dir))
 
     #@timeout(140, os.strerror(errno.ETIMEDOUT))
     def stop_meta(self, num_count, channel_id):
         #self.monitor_file_is_not_empty(num_count, channel_id)
         time.sleep(30)
-        self.run_command("{0}/stop".format(self.crs_meta_dir))
+        self.run_command("{0}/stop -f".format(self.crs_meta_dir))
 
 
     def check_file_contain(self, file_f, wait_flag, *words):
@@ -818,7 +800,7 @@ class crsRemoteLibrary(object):
 
 
     def check_crc(self, channel_id):
-
+        self.check_log_is_writing("file_info.log")
         file_f = '{0}/voice/local/recorded_list'.format(self.crs_storage_dir)
         self.find_voice_files(self.crs_storage_dir, file_f, channel_id)
         crc_list = []
@@ -844,7 +826,7 @@ class crsRemoteLibrary(object):
 
     def check_time_of_file_creation(self, channel_id):
 
-        self.check_log_is_writing("file_trace.log")
+        self.check_log_is_writing("file_info.log")
         stat_lines = []
         file_f = '{0}/voice/local/recorded_list'.format(self.crs_storage_dir)
         self.find_voice_files(self.crs_storage_dir, file_f, channel_id)
@@ -1016,10 +998,33 @@ class crsRemoteLibrary(object):
             s = line.replace(str1, str2)
             sys.stdout.write(s)
 
+    def umount_storage(self, storage):
+        command = subprocess.Popen(["umount -l %s" % (storage)], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = command.communicate()[0]
+        print 'STDOUT:{0}'.format(stdout)
+        command = subprocess.Popen(["for i in {4..5}; do losetup -d /dev/loop$i; done"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    def mount_storage(self, storage):
+        command = subprocess.Popen(["mount {0}.bin {0} -o loop".format(storage)], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = command.communicate()[0]
+        print 'STDOUT:{0}'.format(stdout)
+
+    def check_for_alarms(self, file_f, *words):
+        datafile = file(file_f)
+        for word in words:
+            datafile.seek(0)
+            if word not in datafile.read():
+               raise AssertionError("*ERROR* File does not contain a %s section. Not good!" % word)
+
 
 
 #a = crsRemoteLibrary()
-#a.setup_crs_path("/usr/protei/Protei-MKD/MKD", '/usr/protei/Protei-CRS', '/usr/protei/Protei-CRS-BE', '/usr/protei/Protei-CRS-Meta', '/usr/protei/Protei-CRS-Storage', "/usr/protei/Protei-MKD/MCU", "/usr/protei/Protei-MV.SIP")
+#a.setup_crs_path()
+#a.mount_storage('/var/fs5')
+#a.get_mv_sip_rtp_time("/usr/protei/Protei-MV.SIP/0/logs/RunTime.log")
+#a.check_log_is_writing('file_info.log')
+#print a.get_crc('/usr/protei/Protei-CRS-Storage/voice/local/4/112/e7/d03_0_aced5f41d7b2b807_g729_mx_c545d17c_185b0')
+#a.get_storage_dir()
 #a.find_voice_files("/usr/protei/Protei-CRS-Storage/", "/usr/protei/Protei-CRS-Storage/voice/local/recorded_list", "1")
 #a.monitor_file_is_not_empty(5, "1")
 #a.ts_of_a_record_beginning("/usr/protei/Protei-MV.SIP/0/logs/RunTime.log")
@@ -1027,12 +1032,12 @@ class crsRemoteLibrary(object):
 # a.analyzing_files(100, 1, 5)
 
 # KillProcess("mts")
-# a.check_duration_of_file("g729_mx" ,"1", 10000, 1000)
+#a.check_duration_of_file("g723_mx" ,"1", 23000, 1000)
 # a.check_duration_of_file("g729_rx" ,"1", 10000, 1000)
 # a.check_duration_of_file_post_processing("g711_mx", "1", 7000, 1000)
 
 
 if __name__ == '__main__':
-   import sys
-   from robotremoteserver import RobotRemoteServer
-   RobotRemoteServer(crsRemoteLibrary(), *sys.argv[1:])
+  import sys
+  from robotremoteserver import RobotRemoteServer
+  RobotRemoteServer(crsRemoteLibrary(), *sys.argv[1:])

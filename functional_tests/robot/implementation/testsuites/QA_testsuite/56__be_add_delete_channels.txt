@@ -7,13 +7,13 @@ Suite Setup         My Setup
 *** Variables ***
 ${PATH}                                 be_add_delete_channels/
 ${MTS_DIR}                              mts_log
-${chan_num}                             ${7}
+${chan_num}                             ${6}
 ${meta_port}                            33336
-${voice_port}                           16609
+${voice_port}                           19603
 ${qty}                                  ${1}
-${curl_add_command}                     curl --digest  -u root:elephant -X POST http://192.168.108.26:8087/add_channel --data '{ "ChannelID" : ${chan_num}, "Data" : {"Description" : "ATS 
+${curl_add_command}                     curl --digest  -u root:elephant -X POST http://192.168.108.26:8095/add_channel --data '{ "ChannelID" : 5, "Data" : {"Description" : "ATS 
 ...                                     channel", "MetaPort" : ${meta_port}, "Name" : "ATS", "Type" : "ATS", "VoicePort" : ${voice_port} } }'
-${curl_del_command}                     curl --digest -u root:elephant  http://192.168.108.26:8087/del_channel?id=${chan_num}
+${curl_del_command}                     curl --digest -u root:elephant  http://192.168.108.26:8095/del_channel?id=${chan_num}
 
 
 *** Test Cases ***
@@ -25,17 +25,17 @@ Add Channel And Check For Correct Saved Files
       Import Logs
       Check File Count Codec Type
       Check FileSize And Duration
-      CRS.Del File                          ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
-      CRS.Analyzing Files             ${70}   ${chan_num}    ${qty}
-      [Teardown]                          Clean Files After Test
+      CRS.Del File                         ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
+      CRS.Analyzing Files                  ${45}   ${chan_num}    ${qty}
+      #[Teardown]                          Clean Files After Test
 
 
 Del Channel And Check For Absence Of Files
-      CRS.Run Command                 ${curl_del_command}
+      CRS.Run Command                      ${curl_del_command}
       Check Voice Conf After
       #Start MTS
       #CRS.List Files                      ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
-      [Teardown]                          Clean Files After Test
+      #[Teardown]                          Clean Files After Test
 
 
 *** Keywords ***
@@ -60,7 +60,7 @@ Check Voice Conf Before
     ...                                   "Type" : "ATS"    "VoicePort" : ${voice_port}
 
 Check Voice Conf After
-    [Documentation]                   Проверяем что канал создался
+    [Documentation]                   Проверяем что канал deleted
     CRS.Check File Not Contain        ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    "ChannelID" : ${chan_num}   "MetaPort" : ${meta_port}    "VoicePort" : ${voice_port}
 
 Start MTS

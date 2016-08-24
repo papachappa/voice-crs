@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description="" name="performance_g729">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+    <parameter name="[localPortRTP]" operation="set" value="65000" description="local port of the MTS host" editable="true" />
+    <parameter name="[ssrc]" operation="set" value="1000" description="ssrc"/>
+ 
+    <parameter name="[remotePortRTP]" operation="set" value="19600" description="remote port of the SUT host"  editable="true" />
+
+    <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
+
+    <for index="[index]" from="00" to="13" step="1">
+    <testcase name="performance_g711_with_itc_[index]" state="true" number="[iterations]">
+        <parameter name="[localPortRTP]" operation="number.add" value="[localPortRTP]" value2="[index]" description="local port of the MTS host"/>
+        <parameter name="[ssrc]" operation="number.add" value="[ssrc]" value2="[index]" description="ssrc"/>
+        <parameter name="[performance_g711_with_itc]" operation="set" value="[performance_g711_with_itc]_[index]"/>
+    <!--      <runProfile>
+                <start delay="0.5"/>
+            </runProfile> -->
+        <scenario file="SingleFlow_mx_g711.xml" name="performance_g711_with_itc" state="true" routingName="performance_g711_with_itc"/>
+    </testcase>
+    </for>
+
+</test>
+

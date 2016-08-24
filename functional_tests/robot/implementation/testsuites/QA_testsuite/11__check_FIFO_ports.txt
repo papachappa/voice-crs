@@ -87,8 +87,8 @@ Check availability of ITC
 Start Sending MV-SIP
      [Documentation]                     Запускаем MV-SIP
      Sleep                               2
-     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
-     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            ${login}   ${passwd}   cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            ${login}   ${passwd}   cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
      Sleep                               30
 
 
@@ -109,4 +109,4 @@ Check MV-SIP Log Files
 
 Check FIFO
     [Documentation]                     Проверяем порядок выделения портов
-     CRS.Check FIFO                     ${CRS_REMOTE_PATH}/logs/trace.log    20000  # start port digit
+     CRS.Check FIFO                     ${CRS_REMOTE_PATH}/logs/trace.log    24000  # start port digit

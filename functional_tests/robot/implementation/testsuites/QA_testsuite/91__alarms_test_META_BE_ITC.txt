@@ -1,0 +1,169 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+#Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                           alarms_test_itc/
+# ${PATH_warning}                                 alarms_test_sessions_warning/
+# ${PATH_critical}                                alarms_test_sessions_critical/
+
+*** Test Cases ***
+
+
+ALarms Test META
+     [Documentation]                   Имитируем падение META, видим в alarms ошибку отсутствия Мета.NoChannel = 1 и OSTATE = 1 
+     [Setup]                           My Setup
+     Shut Down META
+     Sleep                             5
+     Check For Alarms META
+     Check OSTATE META
+     [Teardown]                        Start META
+
+ALarms Test BE
+     [Documentation]                   Имитируем падение BE, видим в alarms ошибку отсутствия BE.NoChannel = 1 и OSTATE = 0 
+     [Setup]                           My Setup
+     Shut Down BE
+     Sleep                             3
+     Check For Alarms BE
+     Check OSTATE BE
+     [Teardown]                        Start BE
+
+
+Alarms ITC No Connection
+     [Documentation]                   Имитируем падение ITC, видим в alarms.log Crc.Voice.OMI.ITC;NoCh;INTEGER;1;0;0;
+     [Setup]                           Setup ITC No Connection
+     Sleep                             5
+     Check ITC No Connection
+
+
+Alarms ITC No Free Ports
+     [Documentation]                   Имитируем отсутствие свободных портов для транскодирования, видим в alarms.log Crc.Voice.OMI.ITC;NoPort;INTEGER;2;0;0;
+     [Setup]                            Setup ITC No Free Ports
+     Sleep                             2
+     Start MTS ITC
+     Sleep                             2
+     Check ITC No Port
+
+
+Alarms ITC RVOP
+     [Documentation]                   Имитируем падение RVOP, видим в alarms.log Crc.Voice.OMI.ITC;NoCh;INTEGER;1;0;0;
+     [Setup]                           My Setup
+     Sleep                             2
+     Manipulation.Run Command Without Bash    /usr/protei/MAK/stop    ${itc_host_ip}
+     Sleep                             14
+     Check ITC No Connection
+     Manipulation.Run Command Without Bash    /usr/protei/MAK/start    ${itc_host_ip}
+     Sleep                             14
+     Check ITC OK Connection
+
+# Alarms Test No Sessions Warning
+#      [Documentation]                   Ограничиваем в конфиг-файле количество динамик сессий, имитируем параллельные вызовы ГГС, в alarms.log видим NoSess warning 
+#      [Setup]                           My Setup
+#      Start MTS Warning
+#      Sleep                             11
+#      Check Session Warning
+#      Check OSTATE OK
+
+
+# Alarms Test No Sessions Critical
+#      [Documentation]                   Ограничиваем в конфиг-файле количество динамик сессий, имитируем параллельные вызовы ГГС, в alarms.log видим NoSess critical 
+#      [Setup]                           My Setup
+#      Start MTS Critical
+#      Sleep                             11
+#      Check Session Critical
+#      Check OSTATE Not OK
+
+
+*** Keywords ***
+
+# Clear Alarms Log
+#     Manipulation.Run Command              ${login}   ${passwd}     echo > ${CRS_REMOTE_PATH}/logs/alarms.log      ${remote_lib_host}
+
+My Setup
+
+      Restoring CRS-Alarms G711 Configs
+      Setup Path
+      Restart Voice
+
+Setup ITC No Connection
+      Restoring ITC No Connection Configs
+      Setup Path
+      Restart Voice
+
+Setup ITC No Free Ports
+      Setup ITC No Free Ports Configs
+      Setup Path
+      Restart Voice
+
+Start MTS ITC
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    parallel
+     Sleep                               5
+
+
+Start MTS Warning
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH_warning}test.xml    ${PATH_warning}    ${1}    parallel
+     Sleep                               5
+
+
+Start MTS Critical
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH_critical}test.xml    ${PATH_critical}    ${1}    parallel
+     Sleep                               5
+
+
+Shut Down META
+    Manipulation.Run Command              ${login}   ${passwd}     ${CRS_META_REMOTE_PATH}/stop -f      ${remote_lib_host}
+
+Start META
+    Manipulation.Run Command              ${login}   ${passwd}     ${CRS_META_REMOTE_PATH}/start -f      ${remote_lib_host}
+
+
+Shut Down BE
+    Manipulation.Run Command              ${login}   ${passwd}     ${CRS_BE_REMOTE_PATH}/stop -f      ${remote_lib_host}
+
+Start BE
+    Manipulation.Run Command              ${login}   ${passwd}     ${CRS_BE_REMOTE_PATH}/start -f      ${remote_lib_host}
+
+
+
+Check For Alarms META
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.OMI.Meta;NoCh;INTEGER;1;0;0;;
+
+Check OSTATE META
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice;Crs.Voice;OSTATE;INTEGER;0;0;0;;
+
+
+
+Check For Alarms BE
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crc.Voice.OMI.BE;NoCh;INTEGER;1;0;0;
+
+Check OSTATE BE
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice;Crs.Voice;OSTATE;INTEGER;1;0;0;;
+
+
+Check Session Warning
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Router;Crs.Voice.Router;NoSess;INTEGER;1;0;0
+
+
+Check Session Critical
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Router;Crs.Voice.Router;NoSess;INTEGER;2;0;0
+
+
+
+Check OSTATE OK
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice;Crs.Voice;OSTATE;INTEGER;1;0;0;;
+
+
+Check OSTATE Not OK
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice;Crs.Voice;OSTATE;INTEGER;0;0;0;;
+
+Check ITC OK Connection
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crc.Voice.OMI.ITC;NoCh;INTEGER;0;0;0;
+
+Check ITC No Connection
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crc.Voice.OMI.ITC;NoCh;INTEGER;1;0;0;
+
+Check ITC No Port
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crc.Voice.OMI.ITC;NoPort;INTEGER;2;0;0;

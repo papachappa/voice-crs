@@ -1,0 +1,113 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+
+
+*** Variables ***
+
+${PATH}                                 replica_general/
+
+${login_one_host}                        root
+${passwd_one_host}                       elephant
+${login_second_host}                     root
+${passwd_second_host}                    12345678
+
+${chan_num}                             1
+${qty_local}                            11   # One file is like 2016-08-08
+${qty_remote}                           11
+
+*** Test Cases ***
+
+General Replica Check
+      [Documentation]                    Имеем 2 стойки с системой записи (CRS), запускаем MTS, делаем 10 вызовов на две стойки, проверяем что в папках remote тоже что 
+      ...                                и в local
+      Start MTS
+      Import Logs
+      Sleep                              45
+      Check For Mirroring
+
+
+*** Keywords ***
+
+My Setup
+       Sleep                            3
+       Setup Path
+       Restoring Remote Configs
+       Erasing Storage
+       Restart Voice And Replica
+       Define folder for logs
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    sequential
+     Sleep                               5
+
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/replica_general
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     SippA.Import CRS Logs               ${CRS_REMOTE_PATH}        ${remote_lib_host}
+     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+     SippA.Import MKD Logs               ${CRS_MKD_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MCU Logs               ${CRS_MCU_REMOTE_PATH}    ${remote_lib_host}
+     SippA.Import MVSIP Logs             ${MVSIP_REMOTE_PATH}      ${remote_lib_host}
+
+
+Restart Voice And Replica
+    [Documentation]                       Удаленно рестартуем реплику на 2-х стойках
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${CRS_REMOTE_PATH}/restart -f       ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${CRS_REMOTE_PATH}/restart -f       ${replica_second_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_CLIENT_PATH}/restart -f   ${replica_one_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_AGENT_PATH}/restart -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_CLIENT_PATH}/restart -f   ${replica_second_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_AGENT_PATH}/restart -f    ${replica_second_host}
+
+
+Check For Mirroring
+    [Documentation]                       Проверяем количество записанных файлов и зеркальность на двух стойках
+    # Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    # Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command          ${login_one_host}  ${passwd_one_host}  python ${ROOT_HOME_DIR}replica.py ${qty_local} ${qty_remote} ${chan_num} 0 0   ${replica_one_host}
+    Manipulation.Run Command          ${login_second_host}  ${passwd_second_host}  python ${ROOT_HOME_DIR}replica.py ${qty_local} ${qty_remote} ${chan_num} 0 0   ${replica_second_host}
+    Manipulation.Check For Identity       ${login_one_host}   ${passwd_one_host}   ${replica_one_host}    ${login_second_host}   ${passwd_second_host}   ${replica_second_host}
+
+
+Restoring Remote Meta Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/Meta/meta -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/Meta/meta -f    ${replica_second_host}
+
+Restoring Remote BE Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/BE/be -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/BE/be -f    ${replica_second_host}
+
+
+Restoring Remote Voice Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/Voice/crs -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/Voice/crs -f    ${replica_second_host}
+
+
+Restoring Remote Configs
+    Restoring Remote Meta Config
+    Restoring Remote BE Config
+    Restoring Remote Voice Config
+    Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica.py 1 1 1 1 1   ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica.py 1 1 1 1 2    ${replica_second_host}
+
+
+Erasing Storage
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_second_host}

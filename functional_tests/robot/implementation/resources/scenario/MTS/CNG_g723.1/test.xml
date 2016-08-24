@@ -8,7 +8,7 @@
     <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
     <parameter name="[localPortRTP]" operation="set" value="13000" description="local port of the MTS host" editable="true" />
     <parameter name="[localPortRTP_2]" operation="set" value="13500" description="local port of the MTS host" editable="true" />
-    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host"  editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="19600" description="remote port of the SUT host"  editable="true" />
     <parameter name="[ssrc]" operation="set" value="1000" description="ssrc"/>
     <parameter name="file_g723" operation="file.readmedia" value="g723.1.pdml"/>
     <parameter name="file_g723_2" operation="file.readmedia" value="g723.1.sid_24_byte_30_packets.pdml"/>

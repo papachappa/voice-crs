@@ -58,4 +58,4 @@ Start MTS
 
 Analyzing Files
      [Documentation]                      Проверяем качество записанных файлов
-     CRS.Analyzing Files                 ${60}   ${chan_num}    ${qty}
+     CRS.Analyzing Files                 ${40}   ${chan_num}    ${qty}

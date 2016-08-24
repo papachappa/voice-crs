@@ -5,7 +5,7 @@ Suite Setup         My Suite Setup
 
 *** Variables ***
 
-${eraser_days}                                 STORAGE_LIFE = 1
+${eraser_days}                                 StorageLife = 1
 ${days_before_today}                           ${10}
 
 *** Test Cases ***
@@ -13,24 +13,27 @@ ${days_before_today}                           ${10}
 
 Check That All Files Are Flushed
     [Documentation]                     Сохраняем несколько старых записанных файлов в voice и meta(local и remote), задаем время хранения один день, видим что все файлы удалились
-    [Setup]                             Run Keywords      Create Old Test Files    Run Eraser
+    [Setup]                             Run Keywords      Stop Eraser   Edit Eraser Interval   Create Old Test Files   Run Eraser
+    Sleep                               15
     Check All Data Deleted
     [Teardown]                          Erase Folders
 
 Check That Old Files Are Flushed And Newer Stayed
     [Documentation]                     Сохраняем несколько старых записанных файлов и один текущего дня в voice и meta(local и remote), 
     ...                                 задаем время хранения один день, видим что старые файлы удалились, а текущего дня остались
-    [Setup]                             Run Keywords      Create Old And New Test Files    Run Eraser
+    [Setup]                             Run Keywords      Stop Eraser   Create Old And New Test Files    Run Eraser
+    Sleep                               15
     Check Old Data Deleted
     [Teardown]                          Erase Folders
 
 
-Check That Garbage Files Also Deleted
-    [Documentation]                     Сохраняем несколько старых записанных файлов в voice и meta(local и remote), задаем время хранения один день, 
-    ...                                 добавляем лишних файлов в канал, видим что все файлы удалились 
-    [Setup]                             Run Keywords      Create Old Test Files   Add Some Garbage Files   Run Eraser
-    Check All Data Deleted
-    [Teardown]                          Erase Folders
+# Check That Garbage Files Also Deleted
+#     [Documentation]                     Сохраняем несколько старых записанных файлов в voice и meta(local и remote), задаем время хранения один день, 
+#     ...                                 добавляем лишних файлов в канал, видим что все файлы удалились 
+#     [Setup]                             Run Keywords      Stop Eraser   Create Old Test Files   Add Some Garbage Files   Run Eraser
+#     Sleep                               15
+#     Check All Data Deleted
+#     [Teardown]                          Erase Folders
 
 
 *** Keywords ***
@@ -44,6 +47,7 @@ My Suite Setup
 Erase Folders
     [Documentation]                     Очищаем папки(каналы) с файлами
     Eraser.Emptying Folders
+    Eraser.Emptying Folders Another Server
 
 Create Old Test Files
        [Documentation]                   Создаем госоловые записи и метаданные
@@ -57,6 +61,10 @@ Run Eraser
        [Documentation]                   Запускаем Eraser
        Eraser.Run Eraser
 
+Stop Eraser
+       [Documentation]                   Останавливаем Eraser
+       Eraser.Stop Eraser
+
 
 Check All Data Deleted
        [Documentation]                   Проверяем что все данные удалились
@@ -69,3 +77,7 @@ Check Old Data Deleted
 
 Add Some Garbage Files
         Eraser.Add Some Garbage
+
+Edit Eraser Interval
+       [Documentation]                   Изменяем время запуска Eraser
+        Eraser.Edit Eraser Interval Backup

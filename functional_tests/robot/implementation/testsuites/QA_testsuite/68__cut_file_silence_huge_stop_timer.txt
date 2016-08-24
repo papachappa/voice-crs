@@ -84,5 +84,5 @@ Check File Count Codec Type
 
 Analyzing Files
      [Documentation]                      Проверяем качество записанных файлов
-     CRS.Analyzing Files             ${100}   ${chan_num}    ${qty}
+     CRS.Analyzing Files                  ${50}   ${chan_num}    ${qty}
 

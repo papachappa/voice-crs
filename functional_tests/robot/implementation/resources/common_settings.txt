@@ -34,8 +34,11 @@ ${CRS_g711_file_fragmentation_saved_cfg_file}   crs_g711_file_fragmentation
 ${CRS_itc_saved_cfg_file}                       crs_itc
 ${crs_cut_file_silence_huge_stop_timer}         crs_cut_file_silence_huge_stop_timer
 ${crs_g711_long_stop_timer}                     crs_g711_long_stop_timer
-
-
+${CRS_g729_multistorage_cfg_file}               crs_multistorage
+${CRS_g711_alarms_cfg_file}                     crs_alarms
+${mkd_replica_config}                           mkd_dupl_sys_A
+${crs_alarms_no_itc}                            crs_alarms_no_itc
+${crs_alarms_no_free_itc_ports}                 crs_alarms_no_free_itc_ports
 
 ${CRS-META_saved_cfg_file}   crs_meta
 ${CRS-BE_saved_cfg_file}     crs_be
@@ -86,7 +89,11 @@ ${mvsip1_remote_port}                   5060
 #${mvsip3_remote_port}                   5066
 
 
+${replica_one_host}                     192.168.106.97
+${replica_second_host}                     192.168.72.203
 
+${login}                    root
+${passwd}                   elephant
 
 ${local_ip_a}  ${remote_lib_host}
 ${local_ip_b}  ${remote_lib_host}
@@ -248,7 +255,7 @@ Get MCU Version
     Manipulation.Get Module Version             CRS-MCU   ${CRS_MCU_REMOTE_PATH}/version    ${remote_lib_host}
 
 Stop Sending MVSIP RTP
-    Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH} && ./stop_all.sh    ${remote_lib_host}
+    Manipulation.Run Command            ${login}    ${passwd}   cd ${MVSIP_REMOTE_PATH} && ./stop_all.sh    ${remote_lib_host}
 
 Check Loadable Parameters In MV-SIP configs 
      [Documentation]                    Проверка файла конфигов MV-SIP
@@ -290,61 +297,101 @@ Restoring MVSIP G711 config
 
 
 Restoring CRS-MKD-MCU-Meta-BE G729 configs
-     CRS.Restore Config                   Protei-CRS/${CRS_g729_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g729_saved_cfg_file}
      Restoring Configs
 
 Restoring CRS-MKD-MCU-Meta-BE G711 configs
-     CRS.Restore Config                   Protei-CRS/${CRS_g711_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g711_saved_cfg_file}
      Restoring Configs
 
 
 Restoring CRS-MKD-MCU-Meta-BE-file-fragmentation G729 Configs
-     CRS.Restore Config                   Protei-CRS/${CRS_g729_file_fragmentation_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g729_file_fragmentation_saved_cfg_file}
      Restoring Configs
 
 
 Restoring CRS-MKD-MCU-Meta-BE-file-fragmentation G711 Configs
-     CRS.Restore Config                   Protei-CRS/${CRS_g711_file_fragmentation_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g711_file_fragmentation_saved_cfg_file}
      Restoring Configs
 
 Restoring CRS-MKD-MCU-Meta-BE-long-stop-timer G729 configs
-     CRS.Restore Config                   Protei-CRS/${CRS_g729_long_stop_timer_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g729_long_stop_timer_saved_cfg_file}
      Restoring Configs
 
 Restoring CRS-MKD-MCU-Meta-BE-ITC G729 Configs
-     CRS.Restore Config                   Protei-CRS/${CRS_itc_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_itc_saved_cfg_file}
      Restoring Configs
 
 Restoring CRS-MKD-MCU-Meta-BE-Cut-Silence G729 Configs
-     CRS.Restore Config                   Protei-CRS/${CRS_cut_file_silence_1}
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_cut_file_silence_1}
      Restoring Configs
 
 Restoring CRS-MKD-MCU-Meta-BE-Cut-Silence-Huge-Timer G729 Configs
-     CRS.Restore Config                   Protei-CRS/${crs_cut_file_silence_huge_stop_timer}
+     CRS.Restore Config                   Protei-CRS/Voice/${crs_cut_file_silence_huge_stop_timer}
      Restoring Configs
 
 Restoring CRS-MKD-MCU-Meta-BE-Long-Stop-Timer G711 Configs
-     CRS.Restore Config                   Protei-CRS/${crs_g711_long_stop_timer}
+     CRS.Restore Config                   Protei-CRS/Voice/${crs_g711_long_stop_timer}
+     Restoring Configs
+
+Restoring MKD Replica Config
+     CRS.Restore Config                   Protei-MKD/MKD/${mkd_replica_config}
+
+Restoring CRS-Multistorage G729 Configs
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g729_multistorage_cfg_file}
+     Restoring Configs
+
+Restoring CRS-Alarms G711 Configs
+     CRS.Restore Config                   Protei-CRS/Voice/${CRS_g711_alarms_cfg_file}
+     Restoring Configs
+
+Restoring ITC No Connection Configs
+     CRS.Restore Config                   Protei-CRS/Voice/${crs_alarms_no_itc}
+     Restoring Configs
+
+Setup ITC No Free Ports Configs
+     CRS.Restore Config                   Protei-CRS/Voice/${crs_alarms_no_free_itc_ports}
      Restoring Configs
 
 
+
 Restoring Configs
-     CRS.Restore Config                   Protei-CRS-BE/${CRS-BE_saved_cfg_file}
-     CRS.Restore Config                   Protei-CRS-Meta/${CRS-META_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/BE/${CRS-BE_saved_cfg_file}
+     CRS.Restore Config                   Protei-CRS/Meta/${CRS-META_saved_cfg_file}
      CRS.Restore Config                   Protei-MKD/MKD/${CRS-MKD_saved_cfg_file}
      CRS.Restore Config                   Protei-MKD/MCU/${CRS-MCU_saved_cfg_file}
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/1/*
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/6/*
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/1/*
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/4/*
-     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/7/*
-     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/7/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/6/*
+
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/voice/local/1/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/voice/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/voice/local/6/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/meta/local/1/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/meta/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/meta/local/6/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/voice/local/RecordingList.txt
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_ANOTHER}/temp*
+
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/voice/local/1/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/voice/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/voice/local/6/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/meta/local/1/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/meta/local/4/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/meta/local/6/*
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/voice/local/RecordingList.txt
+     CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/temp*
+
+     # CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/meta/local/7/*
+     # CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/7/*
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/wav*
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/recorded_list
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/wav_files
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/dejavu
      CRS.Run Command                      rm -rf ${CRS_STORAGE_REMOTE_PATH}/voice/local/tmp
-
 
 
 Check CRS Version

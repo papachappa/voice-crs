@@ -1,0 +1,56 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 voice_multistorage/
+${chan_num}                             1
+${qty}                                  ${1}
+${first_qty}                            ${6}
+${second_qty}                           ${4}
+
+*** Test Cases ***
+
+
+Test Voice Multistorage
+    [Documentation]                     Выставляем в конфиге два раздела для сохранения файлов, отправляем поток G729, он пишется на один, затем имитируем отсутствие места на первом, 
+    ...                                 voice пишет на второй, далее проверяем что файлы записались на двух разделах.
+    Start MTS
+    Sleep                               40
+    Run DD
+    Sleep                               100
+    Check File Count
+    # Check Duration
+
+
+
+*** Keywords ***
+
+My Setup
+      Restoring CRS-Multistorage G729 Configs
+      Setup Path
+      Restart Voice
+      Restart Meta
+      Create folder for logs
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Check File Count
+     Manipulation.Check Multistorage     ${login}    ${passwd}   ${remote_lib_host}   ${first_qty}   ${second_qty}
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${0}    sequential
+     Sleep                               3
+
+Run DD
+     [Documentation]                     Запускаем утилиту DD и имитируем уменьшение размера первой точки монтирования
+     Manipulation.Run Command            ${login}    ${passwd}    dd if=/dev/zero of=/var/fs5/voice/local/${chan_num}/temp bs=1M count=65    ${remote_lib_host}

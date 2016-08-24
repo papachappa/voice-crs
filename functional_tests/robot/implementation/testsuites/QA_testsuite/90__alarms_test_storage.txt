@@ -1,0 +1,131 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+#Suite Setup         My Setup
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 alarms_test_storage/
+${dd_warning}                           75
+${dd_critical}                          96
+
+*** Test Cases ***
+
+
+ALarms Test By Disk Number
+     [Documentation]                   Настраиваем два диска в конфиг-файле, делаем umount одному, в alarms.log видим ошибку PATH, 
+     ...                               ошибку Volume и Used.
+     [Setup]                           Run Keywords    Mount Storage   My Setup
+     Umount One Storage
+     Clear Alarms Log
+     Sleep                             16
+     Check For Alarms
+     [Teardown]                         Mount Storage
+
+ALarms General
+     [Documentation]                   Настраиваем два диска в конфиг-файле, делаем umount одному, в alarms.log видим общую аварию No Disk
+     [Setup]                           Run Keywords   Mount Storage   My Setup
+     Umount One Storage
+     Clear Alarms Log
+     Sleep                             17
+     Check For Alarms General One Storage
+     Umount All Storage
+     Clear Alarms Log
+     Sleep                             20
+     Check For Alarms General All Storage
+     Check OSTATE Not OK
+     [Teardown]                         Mount Storage
+
+
+Alarms NEDS Warning
+     [Documentation]                   Настраиваем два диска в конфиг-файле, делаем umount одному, уменьшаем дисковое пространство в alarms.log видим warning аварию NEDS
+     [Setup]                           Run Keywords   Mount Storage   My Setup
+     Umount One Storage
+     Sleep                             16
+     Clear Alarms Log
+     Run DD Warning
+     Sleep                              7
+     Check NEDS Warning
+     [Teardown]                         Mount Storage
+
+Alarms NEDS Critical
+     [Documentation]                   Настраиваем два диска в конфиг-файле, делаем umount одному, уменьшаем дисковое пространство до уровня critical, в alarms видим critical аварию 
+     ...                               NEDS
+     [Setup]                           Run Keywords   Mount Storage   My Setup
+     Umount One Storage
+     Sleep                             15
+     Clear Alarms Log
+     Run DD Critical
+     Sleep                              7
+     Check NEDS Critical
+     Check OSTATE Not OK
+     [Teardown]                         Mount Storage
+
+
+*** Keywords ***
+
+Clear Alarms Log
+    Manipulation.Run Command              ${login}   ${passwd}     echo > ${CRS_REMOTE_PATH}/logs/alarms.log      ${remote_lib_host}
+
+My Setup
+
+      Restoring CRS-Alarms G711 Configs
+      Setup Path
+      Restart Voice
+      Create folder for logs
+
+
+Run DD Warning
+    Manipulation.Run Command          ${login}   ${passwd}     dd if=/dev/zero of=/var/fs4/temp bs=1M count=${dd_warning}      ${remote_lib_host}
+
+Run DD Critical
+    Manipulation.Run Command          ${login}   ${passwd}     dd if=/dev/zero of=/var/fs4/temp bs=1M count=${dd_critical}      ${remote_lib_host}
+
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+
+Umount One Storage
+    CRS.Umount Storage                ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}
+
+
+Umount All Storage
+    CRS.Umount Storage                ${CRS_STORAGE_REMOTE_PATH_ANOTHER}
+    CRS.Umount Storage                ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}
+
+
+Check For Alarms
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;Disc.1.Path;STRING;${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}/voice/local;0;0;;
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;Disc.1.Volume;STRING;0;0;0;;
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;Disc.1.Used;STRING;0;0;0;;
+
+
+Mount Storage
+    CRS.Mount Storage                 ${CRS_STORAGE_REMOTE_PATH_YET_ANOTHER}
+    CRS.Mount Storage                 ${CRS_STORAGE_REMOTE_PATH_ANOTHER}
+
+Check For Alarms General One Storage
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;NoDisk;INTEGER;0;0;0;;
+
+
+Check For Alarms General All Storage
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;NoDisk;INTEGER;1;0;0;;
+
+
+Check NEDS Warning
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;NEDS;INTEGER;1;0;0;;
+
+
+Check NEDS Critical
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice.Storage;NEDS;INTEGER;2;0;0;;
+
+
+Check OSTATE OK
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice;Crs.Voice;OSTATE;INTEGER;1;0;0;;
+
+
+Check OSTATE Not OK
+    CRS.Check For Alarms              ${CRS_REMOTE_PATH}/logs/alarms.log   Crs.Voice;Crs.Voice;OSTATE;INTEGER;0;0;0;;

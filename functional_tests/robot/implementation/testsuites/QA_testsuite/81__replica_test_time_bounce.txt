@@ -1,0 +1,163 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+
+*** Variables ***
+
+${PATH}                                 replica_test_time_bounce/
+${login_one_host}                        root
+${passwd_one_host}                       elephant
+${login_second_host}                     root
+${passwd_second_host}                    12345678
+
+${chan_num}                             1
+${qty_local}                            11
+${qty_remote}                           11
+
+${storage_life}                         STORAGE_LIFE_DAY = 30
+${days_rewind}                          40
+${days_rewind_bounce}                   10
+
+*** Test Cases ***
+
+
+Replica Check Over Storage Life Days
+      [Documentation]                    Имеем 2 стойки с системой записи (CRS), устанавливаем время на одной из них с разницей в минус n дней, запускаем MV-SIP, делаем 10 вызовов на 
+      ...                                две  стойки, видим что файлы Не реплицировались.
+      [Setup]                                My Setup
+      Edit Replica Storage Life
+      Edit Time
+      Start MTS
+      Import Logs
+      Sleep                                  45
+      Check For Emptiness
+      [Teardown]                             Edit Back Time
+
+
+Replica Check Time Bounce
+      [Documentation]                    Имеем 2 стойки с системой записи (CRS), запускаем MV-SIP, делаем 10 вызовов на две стойки, в процессе меняем время назад n, затем возвращаем 
+      ...                                обратно, видим что файлы реплицировались.
+      [Setup]                                 My Setup
+      Start MTS Not Wait
+      Sleep                                   25
+      Edit Time Bounce
+      Sleep                                   20
+      Edit Back Time
+      Import Logs
+      Sleep                                   240
+      Run Keyword And Continue On Failure     Check For Bouncing
+
+
+
+*** Keywords ***
+
+My Setup
+
+       Sleep                            3
+       Setup Path
+       Restoring Remote Configs
+       Erasing Storage
+       Restart Voice And Replica
+       Define folder for logs
+
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    sequential
+     Sleep                               5
+
+Start MTS Not Wait
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${0}    sequential
+     Sleep                               5
+
+
+Define folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/file_fragmentation_g729
+
+
+Import Logs
+     [Documentation]                     Импортируем логи
+     SippA.Import CRS Logs               ${CRS_REMOTE_PATH}        ${remote_lib_host}
+     SippA.Import CRS Meta Logs          ${CRS_META_REMOTE_PATH}   ${remote_lib_host}
+     SippA.Import CRS BE Logs            ${CRS_BE_REMOTE_PATH}     ${remote_lib_host}
+
+
+Restart Voice And Replica
+    [Documentation]                       Удаленно рестартуем реплику на 2-х стойках
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${CRS_REMOTE_PATH}/restart -f       ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${CRS_REMOTE_PATH}/restart -f       ${replica_second_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_CLIENT_PATH}/restart -f   ${replica_one_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_AGENT_PATH}/restart -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_CLIENT_PATH}/restart -f   ${replica_second_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_AGENT_PATH}/restart -f    ${replica_second_host}
+
+
+Check For Bouncing
+    [Documentation]                       Проверяем количество записанных файлов и зеркальность на двух стойках
+    # Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    # Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command          ${login_one_host}  ${passwd_one_host}  python ${ROOT_HOME_DIR}replica.py ${qty_local} ${qty_remote} ${chan_num} 0 0   ${replica_one_host}
+    Manipulation.Run Command          ${login_second_host}  ${passwd_second_host}  python ${ROOT_HOME_DIR}replica.py ${qty_local} ${qty_remote} ${chan_num} 0 0  ${replica_second_host}
+    Manipulation.Check For Identity       ${login_one_host}   ${passwd_one_host}   ${replica_one_host}    ${login_second_host}   ${passwd_second_host}   ${replica_second_host}
+
+Edit Replica Storage Life
+    [Documentation]                       Редактируем количество хранимых дней в Replica
+    Manipulation.Edit Replica Storage Life    ${login_one_host}   ${passwd_one_host}   ${replica_one_host}   days=${storage_life}
+
+Edit Time
+    [Documentation]                       Редактируем время в системе
+    Manipulation.Date Manipulation        ${login_one_host}   ${passwd_one_host}   ${replica_one_host}   days=${days_rewind}
+
+Edit Time Bounce
+    [Documentation]                       Редактируем время в системе
+    Manipulation.Date Manipulation        ${login_one_host}   ${passwd_one_host}   ${replica_one_host}   days=${days_rewind_bounce}
+
+
+Edit Back Time
+    [Documentation]                       Редактируем время в системе
+    Manipulation.Date Now                ${login_one_host}   ${passwd_one_host}   ${replica_one_host}
+
+
+Check For Emptiness
+    [Documentation]                       Проверяем отсутствие реплицированых файлов
+    # Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    # Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command          ${login_one_host}  ${passwd_one_host}  python ${ROOT_HOME_DIR}replica.py ${qty_local} 0 ${chan_num} 0 0    ${replica_one_host}
+    Manipulation.Run Command          ${login_second_host}  ${passwd_second_host}  python ${ROOT_HOME_DIR}replica.py ${qty_local} 0 ${chan_num} 0 0    ${replica_second_host}
+    Manipulation.Check For Identity      ${login_one_host}   ${passwd_one_host}   ${replica_one_host}   ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   Overdays
+
+Restoring Remote Meta Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/Meta/meta -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/Meta/meta -f    ${replica_second_host}
+
+Restoring Remote BE Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/BE/be -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/BE/be -f    ${replica_second_host}
+
+
+Restoring Remote Voice Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/Voice/crs -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/Voice/crs -f    ${replica_second_host}
+
+
+Restoring Remote Configs
+    Restoring Remote Meta Config
+    Restoring Remote BE Config
+    Restoring Remote Voice Config
+    Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica.py 1 1 1 1 1   ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica.py 1 1 1 1 2    ${replica_second_host}
+
+
+Erasing Storage
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_second_host}

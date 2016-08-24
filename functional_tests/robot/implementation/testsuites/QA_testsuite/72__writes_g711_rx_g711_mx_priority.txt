@@ -27,7 +27,7 @@ Writing g711_tx g729_rx g711_mx
      Import Logs
      Check File Count Codec Type
      Check FileSize
-     CRS.Analyzing Files             ${100}   ${chan_num}    ${qty}
+     CRS.Analyzing Files             ${50}   ${chan_num}    ${qty}
 
 
 
@@ -45,7 +45,7 @@ Create folder for logs
 
 
 Should resource error
-     CRS.Check File Contain              ${CRS_LOGS_DIR}/controller_warning.log     ${0}      Resource request rejecterd
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/controller_warning.log     ${0}      Resource request rejected
 
 
 Start MTS
@@ -84,4 +84,4 @@ Check File Count Codec Type
 
 Analyzing Files G729
      [Documentation]                     Проверяем качество записанных файлов
-     CRS.Analyzing Files            ${140}    ${chan_num}     ${qty}
+     CRS.Analyzing Files            ${50}    ${chan_num}     ${qty}

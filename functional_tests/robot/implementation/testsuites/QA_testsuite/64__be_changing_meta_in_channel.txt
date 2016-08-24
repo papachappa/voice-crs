@@ -11,14 +11,14 @@ ${IterationsLimit}                      1
 ${RTP_time}                             10000
 ${PATH}                                 be_changing_meta_in_channel
 ${chan_num}                             1
-${meta_port_before}                            33333
-${voice_port_before}                           16600
-${meta_port_after}                            33336
-${voice_port_after}                           16609
+${meta_port_before}                            34333
+${voice_port_before}                           19600
+${meta_port_after}                            34336
+${voice_port_after}                           19603
 
-${curl_after_command}                     curl --digest  -u root:elephant -X POST http://192.168.108.26:8087/modify_channel_data?id=1 --data '{"Description" : "ATS channel", 
+${curl_after_command}                     curl --digest  -u root:elephant -X POST http://192.168.108.26:8095/modify_channel_data?id=1 --data '{"Description" : "ATS channel", 
 ...                                       "MetaPort" : ${meta_port_after}, "Name" : "ATS", "Type" : "ATS", "VoicePort" : ${voice_port_after}}'
-${curl_before_command}                    curl --digest  -u root:elephant -X POST http://192.168.108.26:8087/modify_channel_data?id=1 --data '{"Description" : "ATS channel", 
+${curl_before_command}                    curl --digest  -u root:elephant -X POST http://192.168.108.26:8095/modify_channel_data?id=1 --data '{"Description" : "ATS channel", 
 ...                                       "MetaPort" : ${meta_port_before}, "Name" : "ATS", "Type" : "ATS", "VoicePort" : ${voice_port_before}}'
 
 
@@ -26,10 +26,10 @@ ${curl_before_command}                    curl --digest  -u root:elephant -X POS
 *** Test Cases ***
 
 
-# MKD voice ports 16600, meta ports 33333
-# Voice and Meta ports 16600/33333
+# MKD voice ports 19600, meta ports 34333
+# Voice and Meta ports 19600/34333
 
-Start Sending MV-SIP MKD port 16600 Meta Port 33333 Voice port 16600
+Start Sending MV-SIP MKD port 19600 Meta Port 34333 Voice port 19600
      [Documentation]                     Запускаем MV-SIP, проверяем  размер файла, качество, мета информацию, а также время событий
       [Setup]                            Setup And Check MV-SIP Parameters
       Start Sending MV-SIP
@@ -37,37 +37,37 @@ Start Sending MV-SIP MKD port 16600 Meta Port 33333 Voice port 16600
       [Teardown]                         Clean Files After Test
 
 
-# MKD voice ports 16600, meta ports 33333
-# Voice and Meta ports 16609/33336
+# MKD voice ports 19600, meta ports 34333
+# Voice and Meta ports 19603/33336
 
 
 
-Start Sending MV-SIP MKD port 16600 Meta Port 33333 Voice port 16609
+Start Sending MV-SIP MKD port 19600 Meta Port 34333 Voice port 19603
      [Documentation]                     Запускаем MV-SIP, Проверяем  отсутствие Meta информации и файлов вызовов
-     [Setup]                             Change Meta And Voice Ports 16609
+     [Setup]                             Change Meta And Voice Ports 19603
      Start Sending MV-SIP
      Check absence of duration and quality and meta
      [Teardown]                         Clean Files After Test
 
 
-# # MKD voice ports 16609, meta ports 33336
-# # Voice and Meta ports 16609/33336
+# # MKD voice ports 19603, meta ports 33336
+# # Voice and Meta ports 19603/33336
 
 
-Start Sending MV-SIP MKD Port 16609 Meta Port 33336 Voice port 16609
+Start Sending MV-SIP MKD Port 19603 Meta Port 33336 Voice port 19603
      [Documentation]                     Запускаем MV-SIP, Проверяем  размер файла, качество, мета информацию, а также время событий
-     [Setup]                              Change MKD Meta and Voice Ports 16609
+     [Setup]                              Change MKD Meta and Voice Ports 19603
      Start Sending MV-SIP
      Check duration and quality and meta
      [Teardown]                         Clean Files After Test
 
-# # MKD voice ports 16609, meta ports 33336
-# # Voice and Meta ports 16600/33333
+# # MKD voice ports 19603, meta ports 33336
+# # Voice and Meta ports 19600/34333
 
 
-Start Sending MV-SIP MKD Port 16609 Meta Port 33336 Voice port 16600
+Start Sending MV-SIP MKD Port 19603 Meta Port 33336 Voice port 19600
      [Documentation]                     Запускаем MV-SIP, Проверяем  отсутствие Meta информации и файлов вызовов
-     [Setup]                             Change Meta And Voice Ports 16600
+     [Setup]                             Change Meta And Voice Ports 19600
      Start Sending MV-SIP
      Check absence of duration and quality and meta
 
@@ -107,39 +107,39 @@ Setup And Check MV-SIP Parameters
 Start Sending MV-SIP
      [Documentation]                     Запускаем MV-SIP
      Sleep                               2
-     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
-     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            ${login}   ${passwd}   cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            ${login}   ${passwd}   cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
      Sleep                               30
 
 
 
-Change Meta And Voice Ports 16609
+Change Meta And Voice Ports 19603
       [Documentation]                       Меням порты в мета и войс
       CRS.Run Command                       ${curl_after_command}
-      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}   "MetaPort" : 33336
-      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}   "VoicePort" : 16609
-      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}     "MetaPort" : 33336
-      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}   "VoicePort" : 16609
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}   "MetaPort" : 34336
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}   "VoicePort" : 19603
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}     "MetaPort" : 34336
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}   "VoicePort" : 19603
 
 
-Change MKD Meta and Voice Ports 16609
+Change MKD Meta and Voice Ports 19603
       [Documentation]                       Изменяем в МКД мета войс порты
       ${file}=                              CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
-      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/Config.cfg     CRS1_RTP_Address = 192.168.108.26:16600        CRS1_RTP_Address = 192.168.108.26:16609
-      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    Port = 33333;     Port = 33336;
-      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    Login="33333";     Login="33336";
+      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/Config.cfg     CRS1_RTP_Address = 192.168.108.26:19600        CRS1_RTP_Address = 192.168.108.26:19603
+      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    Port = 34333;     Port = 33336;
+      CRS.Replace String                    ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    Login="34333";     Login="33336";
       CRS.Run Command                       ${CRS_MKD_REMOTE_PATH}/restart -f
-      CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/Config.cfg    ${0}    CRS1_RTP_Address = 192.168.108.26:16609
+      CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/Config.cfg    ${0}    CRS1_RTP_Address = 192.168.108.26:19603
       CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    ${0}    Port = 33336;
       CRS.Check File Contain                ${CRS_MKD_REMOTE_PATH}/config/om_interface.cfg    ${0}    Login="33336";
 
-Change Meta And Voice Ports 16600
+Change Meta And Voice Ports 19600
       [Documentation]                       Меням порты в мета и войс
       CRS.Run Command                       ${curl_before_command}
-      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}    "MetaPort" : 33333
-      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}    "VoicePort" : 16600
-      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}    "MetaPort" : 33333
-      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}    "VoicePort" : 16600
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}    "MetaPort" : 34333
+      CRS.Check File Contain                ${CRS_REMOTE_PATH}/config/StaticChannel.cfg    ${0}    "VoicePort" : 19600
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}    "MetaPort" : 34333
+      CRS.Check File Contain                ${CRS_META_REMOTE_PATH}/config/data.cfg    ${0}    "VoicePort" : 19600
 
 
 
@@ -149,7 +149,7 @@ Check duration and quality and meta
       [Documentation]                       Проверяем  размер файла и качество, также мета информацию, проверяем соответствие времени установления SIP сообщений и время в мета логах
       CRS.Check File Size                  ${chan_num}     ${7000}    ${12000}   ${1}
       ${qty}=                             Evaluate     ${IterationsLimit} * 5
-      CRS.Analyzing Files                ${70}    ${chan_num}    ${qty}
+      CRS.Analyzing Files                ${50}    ${chan_num}    ${qty}
       ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
       CRS.Check File Contain              ${file}    ${1}    ConnectionSetup;     ConnectionReleased;
 

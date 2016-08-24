@@ -35,7 +35,7 @@ My Setup
 Check RVOP Connection
      [Documentation]                     Проверяем недоступность ITC(RVOP)
      Sleep                               5
-     CRS.Check File Contain              ${CRS_LOGS_DIR}/warning.log      ${0}     Resource request rejecterd
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/warning.log      ${0}     Resource request rejected
 
 
 
@@ -57,7 +57,7 @@ Check Duration FileSize
 
 Analyzing Files
      [Documentation]                      Проверяем качество записанных файлов
-     CRS.Analyzing Files                  ${60}   ${chan_num}    ${qty}
+     CRS.Analyzing Files                  ${50}   ${chan_num}    ${qty}
 
 
 Check File Count Codec Type

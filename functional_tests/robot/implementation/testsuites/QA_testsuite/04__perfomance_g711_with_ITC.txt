@@ -8,7 +8,7 @@ Suite Setup         My Setup
 
 ${PATH}                                  performance_g711_with_itc/
 ${chan_num}                              1
-${qty}                                   ${60}
+${qty}                                   ${30}
 
 
 
@@ -21,7 +21,7 @@ Perfomance Test Sending G711 With Itc
       Sleep                              5
       Check File Count Codec Type
       #Check FileSize                   # Убрано т.к. от ITC приходит транскодирование только половины каналов
-      Analyzing Files G729
+      Analyzing Files G711
 
 *** Keywords ***
 
@@ -73,8 +73,8 @@ Check File Count Codec Type
      CRS.Check File Count                 ${chan_num}   ${qty}
      #CRS.Check File Codec                 ${chan_num}   g729   mx    ${qty}       # Убрано т.к. от ITC приходит транскодирование только половины каналов
 
-Analyzing Files G729
+Analyzing Files G711
      [Documentation]                     Проверяем качество записанных файлов
-     CRS.Analyzing Files                 ${150}    ${chan_num}    ${qty}
+     CRS.Analyzing Files                 ${30}    ${chan_num}    ${qty}
 
 

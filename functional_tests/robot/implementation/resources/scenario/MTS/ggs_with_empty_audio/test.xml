@@ -14,7 +14,7 @@
     <!-- <parameter name="[localClient]" operation="set" value="true" description="flag to activate the client scenario" editable="true" /> -->
 
     <parameter name="[remoteHostSIP]" operation="set" value="192.168.108.26" description="remote address of the SUT host" editable="true"/>
-    <parameter name="[remotePortSIP]" operation="set" value="5061" description="remote port of the SUT host" editable="true"/>
+    <parameter name="[remotePortSIP]" operation="set" value="7061" description="remote port of the SUT host" editable="true"/>
 
     <parameter name="[remoteSIP]" operation="set" value="[remoteHostSIP]:[remotePortSIP]"/>
     <!-- <parameter name="[remoteServer]" operation="set" value="true" description="flag to activate the server scenario" editable="true"/> -->
@@ -28,7 +28,7 @@
 
     <parameter name="[remoteHostRTP]" operation="system.ipaddress" value2="[IPVersion]"/>
     <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26" description="remote address of the SUT host" editable="true" />
-    <parameter name="[remotePortRTP]" operation="set" value="17600" description="remote port of the SUT host" editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="20600" description="remote port of the SUT host" editable="true" />
     <!-- <parameter name="[remoteServer]" operation="set" value="true" description="flag to activate the server scenario" editable="true"/> -->
 
     <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>

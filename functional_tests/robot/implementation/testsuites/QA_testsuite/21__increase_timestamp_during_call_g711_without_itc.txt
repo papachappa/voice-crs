@@ -38,7 +38,7 @@ Define folder for logs
 Check RVOP Connection
      [Documentation]                     Проверяем недоступность ITC(RVOP)
      Sleep                               5
-     CRS.Check File Contain              ${CRS_LOGS_DIR}/warning.log      ${0}     Resource request rejecterd
+     CRS.Check File Contain              ${CRS_LOGS_DIR}/warning.log      ${0}     Resource request rejected
 
 
 

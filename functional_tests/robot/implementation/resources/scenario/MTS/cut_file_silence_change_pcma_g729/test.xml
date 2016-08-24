@@ -8,20 +8,38 @@
     <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
     <parameter name="[ssrc]" operation="set" value="1000" description="ssrc"/>
 
+   <parameter name="[retransmitTimers(0)]" operation="set" value="500"/>
+    <parameter name="[retransmitTimers(1)]" operation="set" value="1000"/>
+    <parameter name="[retransmitTimers(2)]" operation="set" value="2000"/>
+    <parameter name="[retransmitTimers(3)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(4)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(5)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(6)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(7)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(8)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(9)]" operation="set" value="4000"/>
+    <parameter name="[retransmitTimers(10)]" operation="set" value="4000"/>
+
 
     <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
     <parameter name="file_g729" operation="file.readmedia" value="g729.right.pdml"/>
 
+    <runProfile>
+      <start delay="1"/>
+      <step time="0" frequency="100"/>
+    </runProfile>
+
+
     <testcase name="cut_file_silence_change_pcma_pcma_rx" state="true" number="[iterations]">
     <parameter name="[localPortRTP]" operation="set" value="56000" description="local port of the MTS host" editable="true" />
-    <parameter name="[remotePortRTP]" operation="set" value="16601" description="remote port of the SUT host"  editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="19601" description="remote port of the SUT host"  editable="true" />
         <scenario file="SingleFlow_pcma_rx.xml" name="cut_file_silence_change_pcma_pcma_rx" state="true" routingName="cut_file_silence_change_pcma_pcma_rx"/>
     </testcase>
 
 
     <testcase name="cut_file_silence_change_pcma_g729_mx" state="true" number="[iterations]">
     <parameter name="[localPortRTP]" operation="set" value="56001" description="local port of the MTS host" editable="true" />
-    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host"  editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="19600" description="remote port of the SUT host"  editable="true" />
         <runProfile>
         <start delay="11"/>
         </runProfile> 

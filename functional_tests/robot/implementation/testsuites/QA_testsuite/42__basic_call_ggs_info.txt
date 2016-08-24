@@ -55,7 +55,7 @@ Check Call Meta
 
      CRS.Check File Contain              ${file}    ${0}    ActivateAbonent;192.168.100.0;User100;    ActivateAbonent;192.168.100.1;User200;    ActivateAbonent;192.168.100.2;User300;    ActivateAbonent;192.168.100.3;User400;
      CRS.Check File Contain              ${file}    ${0}    DeactivateAbonent;192.168.100.0;User100;    DeactivateAbonent;192.168.100.1;User200;   DeactivateAbonent;192.168.100.2;User300;   DeactivateAbonent;192.168.100.3;User400;
-     CRS.Check File Contain              ${file}    ${0}    DeactivateConference;;192.168.100.60;
+     CRS.Check File Contain              ${file}    ${0}    DeactivateConference;User1;192.168.100.60
 
 
 

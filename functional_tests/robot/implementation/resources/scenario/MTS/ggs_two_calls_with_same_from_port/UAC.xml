@@ -88,7 +88,7 @@ Content-Length: 0
 
 <!-- Sending RTP -->
 
-<createListenpointRTPFLOW name="inviter" localHost="[localHostRTP(0)]" localPort="[localPortRTP]"/>
+<createListenpointRTPFLOW name="inviter" localHost="[localHostRTP]" localPort="[localPortRTP]"/>
 
         <parameter name="[testcase:payloadList]" operation="set" value="[[fileWave(0)]]"/>
         <parameter name="[payloadType]" operation="set" value="[[fileWave(1)]]"/>

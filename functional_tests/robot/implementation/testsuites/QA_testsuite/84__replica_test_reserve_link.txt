@@ -1,0 +1,153 @@
+*** Settings ***
+Resource        ${COMMON_SETTINGS_FILE}
+
+Suite Setup         My Setup
+
+#Suite Teardown      Sleep       3
+
+*** Variables ***
+
+${PATH}                                 replica_test_reserve_link/
+${PATH_second}                          replica_test_reserve_link_backward/
+${chan_num}                             1
+${login_one_host}                        root
+${passwd_one_host}                       elephant
+${login_second_host}                     root
+${passwd_second_host}                    12345678
+
+*** Test Cases ***
+
+
+Test Replica Speed Recerve Link One Direction
+    [Documentation]                     делаем ограничение в 8 Мбит/с на скорость линка в одну сторону, имитируем вызовы,  видим что скорость скачивания ограничена 8 Мбит/с
+    [Setup]                              Run Keywords    Restoring Replica Configs Side B    Restart Voice And Stop Replica       Erasing Storage
+
+    Start MTS
+    Sleep                               5
+    Create DD Files Side B
+    Start Replica
+    Sleep                               20
+    Start Speed Measurement Side B
+
+
+Test Replica Speed Recerve Link Backward Direction
+    [Documentation]                     делаем ограничение в 8 Мбит/с на скорость линка в другую сторону, имитируем вызовы,  видим что скорость скачивания ограничена 8 Мбит/с
+    [Setup]                              Run Keywords    Restoring Replica Configs Side A    Restart Voice And Stop Replica       Erasing Storage
+    Start MTS Backward
+    Sleep                               5
+    Create DD Files Side A
+    Start Replica
+    Sleep                               20
+    Start Speed Measurement Side A
+
+
+*** Keywords ***
+
+My Setup
+
+       Sleep                            3
+       Setup Path
+       Restoring Remote Configs
+       Create folder for logs
+
+
+Create folder for logs
+       [Documentation]                   Создаем папку для логов
+       SippA.Run Scenario                ${SCENARIO_PATH}/${PATH}
+
+Start MTS
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH}test.xml    ${PATH}    ${1}    sequential
+     Sleep                               3
+
+
+Start MTS Backward
+     [Documentation]                     Запускаем утилиту MTS
+     CRS.Run MTS                         ${MTS_REMOTE_PATH}       ${MTS_REMOTE_TEST_PATH}/${PATH_second}test.xml    ${PATH_second}    ${1}    sequential
+     Sleep                               3
+
+
+Erasing Storage
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${NEW_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${NEW_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_second_host}
+
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${BACK_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${BACK_CRS_STORAGE}/voice/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${BACK_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${BACK_CRS_STORAGE}/voice/remote/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${BACK_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${BACK_CRS_STORAGE}/meta/local/${chan_num}/*   ${replica_second_host}
+     Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}        rm -rf ${BACK_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_one_host}
+     Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}     rm -rf ${BACK_CRS_STORAGE}/meta/remote/${chan_num}/*   ${replica_second_host}
+
+
+Restart Voice And Stop Replica
+    [Documentation]                       Удаленно рестартуем voice и останавливаем replica на 2-х стойках
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${CRS_REMOTE_PATH}/restart -f       ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${CRS_REMOTE_PATH}/restart -f       ${replica_second_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_CLIENT_PATH}/stop -f   ${replica_one_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_AGENT_PATH}/stop -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_CLIENT_PATH}/stop -f   ${replica_second_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_AGENT_PATH}/stop -f    ${replica_second_host}
+
+Start Replica
+    [Documentation]                       Удаленно стартуем replica
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_CLIENT_PATH}/start -f   ${replica_one_host}
+    Manipulation.Run Command              ${login_one_host}      ${passwd_one_host}      ${REPLICA_AGENT_PATH}/start -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_CLIENT_PATH}/start -f   ${replica_second_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   ${REPLICA_AGENT_PATH}/start -f    ${replica_second_host}
+
+Restoring Remote Meta Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/Meta/meta -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/Meta/meta -f    ${replica_second_host}
+
+Restoring Remote BE Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/BE/be -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/BE/be -f    ${replica_second_host}
+
+
+Restoring Remote Voice Config
+    Manipulation.Run Command              ${login_one_host}       ${passwd_one_host}      _restore_config Protei-CRS/Voice/crs -f    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}    ${passwd_second_host}   _restore_config Protei-CRS/Voice/crs -f    ${replica_second_host}
+
+
+Restoring Remote Configs
+    Restoring Remote Meta Config
+    Restoring Remote BE Config
+    Restoring Remote Voice Config
+
+Restoring Replica Configs Side B
+    Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica_reserve_link.py   ${ROOT_HOME_DIR}
+    Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica_reserve_link.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 1 1    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 1 2    ${replica_second_host}
+
+Restoring Replica Configs Side A
+    Manipulation.Upload File              ${login_one_host}      ${passwd_one_host}      ${replica_one_host}      ${EXECUTION_LIB_PATH}/replica_reserve_link.py   ${ROOT_HOME_DIR}
+    Manipulation.Upload File              ${login_second_host}   ${passwd_second_host}   ${replica_second_host}   ${EXECUTION_LIB_PATH}/replica_reserve_link.py   ${ROOT_HOME_DIR}
+    Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 1 3    ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 1 4    ${replica_second_host}
+
+
+
+Create DD Files Side B
+    #Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 2 1   ${replica_one_host}
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 2 1    ${replica_second_host}
+
+Create DD Files Side A
+    Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 2 1   ${replica_one_host}
+    #Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 2 1    ${replica_second_host}
+
+
+Start Speed Measurement Side B
+    Manipulation.Run Command              ${login_one_host}   ${passwd_one_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 3 1    ${replica_one_host}
+
+Start Speed Measurement Side A
+    Manipulation.Run Command              ${login_second_host}   ${passwd_second_host}   python ${ROOT_HOME_DIR}replica_reserve_link.py 3 1    ${replica_second_host}
+

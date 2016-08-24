@@ -11,7 +11,7 @@
     <parameter name="[ssrc]" operation="set" value="1000" description="ssrc"/>
  
 
-    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host"  editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="19600" description="remote port of the SUT host"  editable="true" />
 
     <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
 

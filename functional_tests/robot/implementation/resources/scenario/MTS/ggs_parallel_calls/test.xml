@@ -8,13 +8,15 @@
 
     <parameter name="[localHostSIP]" operation="set" value="192.168.108.26" description="local address of the MTS host" editable="true"/>
     <!-- <parameter name="[localPortSIP]" operation="set" value="15500" description="local port of the MTS host" editable="true"/> -->
+
     <parameter name="[localPortSIP]" operation="file.readProperty" value="sip.properties" value2="listenpoint.LOCAL_PORT"/>
+
     <parameter name="[localSIP]" operation="set" value="[localHostSIP]:[localPortSIP]"/>
 
     <!-- <parameter name="[localClient]" operation="set" value="true" description="flag to activate the client scenario" editable="true" /> -->
 
     <parameter name="[remoteHostSIP]" operation="set" value="192.168.108.26" description="remote address of the SUT host" editable="true"/>
-    <parameter name="[remotePortSIP]" operation="set" value="5061" description="remote port of the SUT host" editable="true"/>
+    <parameter name="[remotePortSIP]" operation="set" value="7061" description="remote port of the SUT host" editable="true"/>
 
     <parameter name="[remoteSIP]" operation="set" value="[remoteHostSIP]:[remotePortSIP]"/>
     <!-- <parameter name="[remoteServer]" operation="set" value="true" description="flag to activate the server scenario" editable="true"/> -->
@@ -28,7 +30,7 @@
 
     <parameter name="[remoteHostRTP]" operation="system.ipaddress" value2="[IPVersion]"/>
     <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26" description="remote address of the SUT host" editable="true" />
-    <parameter name="[remotePortRTP]" operation="set" value="17600" description="remote port of the SUT host" editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="20600" description="remote port of the SUT host" editable="true" />
 -->
 
     <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
@@ -54,10 +56,11 @@
     <parameter name="[retransmitTimers(10)]" operation="set" value="4000"/>
 
     <parameter name="fileWave" operation="file.readwave" value="g711.sample.wav" value2="20"/>
-<!--    <runProfile>
-     <start delay="2"/>
+    <runProfile>
+        <start delay="1"/>
+        <step time="0" frequency="100"/>
     </runProfile>
--->
+
     <testcase name="ggs_parallel_calls" state="true" number="[iterations]" description="sip">
     <scenario file="UAC.xml" name="ggs_parallel_calls" state="true" routingName="ggs_parallel_calls"/>
     </testcase>

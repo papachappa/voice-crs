@@ -22,7 +22,7 @@ Writing g711_mx g729_tx g711_rx
      Check File Count Codec Type
      Check FileSize And Duration
      CRS.Del File                          ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
-     CRS.Analyzing Files             ${70}   ${chan_num}    ${qty}
+     CRS.Analyzing Files             ${50}   ${chan_num}    ${qty}
      #[Teardown]                           Clean Files After Test
 
 

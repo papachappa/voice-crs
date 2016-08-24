@@ -76,7 +76,7 @@ Check File Count Codec Type
 
 Check FileDuration
       [Documentation]                      Проверяем размер файла
-      CRS.Check Duration Of File           g729_mx    ${chan_num}   ${37000}    ${2000}
+      CRS.Check Duration Of File           g729_mx    ${chan_num}   ${38000}    ${2500}
 
 
 
@@ -84,6 +84,7 @@ Check Meta Information
       [Documentation]                     Проверяем события вызова в мета модуле
       ${file}=                            CRS.Get Filename       ${META_LOGS_DIR}/${chan_num}/
       CRS.Check File Contain              ${file}    ${0}    ActivateConference;
+      #CRS.Check File Contain              ${file}    ${0}    DeactivateConference;
       CRS.Check File Not Contain          ${file}    DeactivateConference
       [Teardown]                           Starting Meta
 

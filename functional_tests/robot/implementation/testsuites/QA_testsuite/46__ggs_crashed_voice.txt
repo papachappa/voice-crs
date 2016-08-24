@@ -84,6 +84,7 @@ Check File Count Codec Type
 
 
 Check CRC Duration Recording List
+
       [Documentation]                       Проверяем CRC, длительность файла, отсутствие RecordingList
       CRS.Check CRC                        ${chan_num}
       CRS.Check File Exist                 ${RecordingList_File}    0
@@ -92,9 +93,10 @@ Check CRC Duration Recording List
       CRS.Del File                         ${CRS_STORAGE_REMOTE_PATH}/voice/local/${chan_num}
 
 
+
 Analyzing Files
      [Documentation]                      Проверяем качество записанных файлов
-     CRS.Analyzing Files                  ${100}   ${chan_num}   ${qty}
+     CRS.Analyzing Files                  ${50}   ${chan_num}   ${qty}
 
 
 Check Meta Information

@@ -17,12 +17,12 @@ ${qty}                                   ${100}
 Perfomance Test Sending G729
 
       [Documentation]                    Имитируем массовые вызовы G729, проверяем нужное количество файлов и их качество
-      Manipulation.Run Command           netstat -s -u    ${remote_target_host}
+      Manipulation.Run Command           ${login}    ${passwd}   netstat -s -u    ${remote_target_host}
       Start MTS
       Sleep                              5
       #Check File Count Codec Type
       Check FileSize
-      Manipulation.Run Command           netstat -s -u    ${remote_target_host}
+      Manipulation.Run Command           ${login}    ${passwd}   netstat -s -u    ${remote_target_host}
       Analyzing Files G729
 
 

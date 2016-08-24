@@ -42,7 +42,7 @@ Check File Count Codec Type
 
 Check Duration
       [Documentation]                     Проверяем  размер файла и длительность
-      CRS.Check Duration Of File          g723_mx    ${chan_num}    ${48000}    ${1000}
+      CRS.Check Duration Of File          g723_mx    ${chan_num}    ${49000}    ${1000}
 
 
 Start MTS
@@ -52,4 +52,4 @@ Start MTS
 
 Analyzing Files G729
      [Documentation]                     Проверяем качество записанных файлов
-     CRS.Analyzing Files                 ${100}    ${chan_num}     ${qty}
+     CRS.Analyzing Files                 ${600}    ${chan_num}     ${qty}

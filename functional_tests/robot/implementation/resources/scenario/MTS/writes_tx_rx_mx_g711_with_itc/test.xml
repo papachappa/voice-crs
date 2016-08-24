@@ -8,7 +8,7 @@
     <parameter name="[localPortRTP]" operation="set" value="26000" description="local port of the MTS host" editable="true" />
 
     <parameter name="[remoteHostRTP]" operation="set" value="192.168.108.26"/> 
-<!--    <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host" editable="true" /> -->
+<!--    <parameter name="[remotePortRTP]" operation="set" value="19600" description="remote port of the SUT host" editable="true" /> -->
 
     <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
 
@@ -19,19 +19,19 @@
 
     <testcase name="[FlowName]_g711_tx_part_number_[index]" state="true" number="[iterations]">
         <parameter name="[PayloadType]" operation="set" value="8"/>   
-        <parameter name="[remotePortRTP]" operation="set" value="16602" description="remote port of the SUT host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="19602" description="remote port of the SUT host" editable="true" />
         <scenario file="SingleFlow.xml" name="[FlowName]" state="true" routingName="[FlowName]"/>
     </testcase>
 
     <testcase name="[FlowName]_g711_rx_part_number_[index]" state="true" number="[iterations]">
         <parameter name="[PayloadType]" operation="set" value="8"/>  
-        <parameter name="[remotePortRTP]" operation="set" value="16601" description="remote port of the SUT host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="19601" description="remote port of the SUT host" editable="true" />
         <scenario file="SingleFlow.xml" name="[FlowName]" state="true" routingName="[FlowName]"/>
     </testcase>
 
     <testcase name="[FlowName]_g711_mx_part_number_[index]" state="true" number="[iterations]">
         <parameter name="[PayloadType]" operation="set" value="8"/>   
-        <parameter name="[remotePortRTP]" operation="set" value="16600" description="remote port of the SUT host" editable="true" />
+        <parameter name="[remotePortRTP]" operation="set" value="19600" description="remote port of the SUT host" editable="true" />
         <scenario file="SingleFlow.xml" name="[FlowName]" state="true" routingName="[FlowName]"/>
     </testcase>
 

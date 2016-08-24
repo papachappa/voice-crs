@@ -83,8 +83,8 @@ Define folder for logs
 Start Sending MV-SIP
      [Documentation]                     Запускаем MV-SIP
      Sleep                               2
-     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
-     Manipulation.Run Command            cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            ${login}   ${passwd}   cd ${MVSIP_REMOTE_PATH}/1 && ./start    ${remote_lib_host}
+     Manipulation.Run Command            ${login}   ${passwd}   cd ${MVSIP_REMOTE_PATH}/0 && ./start    ${remote_lib_host}
      Sleep                               20
 
 

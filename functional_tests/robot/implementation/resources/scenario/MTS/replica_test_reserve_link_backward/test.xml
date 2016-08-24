@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<test description="" name="performance_g729">
+
+    <parameter description="version of the IP protocol" editable="true" name="[IPVersion]" operation="set" value="ipv4"/>
+    <parameter name="[transport]" operation="set" value="UDP"/>
+    <parameter name="[localHostRTP]" operation="set" value="192.168.108.26"/>
+    <parameter name="[iterations]" operation="set" value="1" description=" iterations number" editable="true"/>
+    <parameter name="[localPortRTP]" operation="set" value="65000" description="local port of the MTS host" editable="true" />
+    <parameter name="[remotePortRTP]" operation="set" value="16000" description="remote port of the SUT host"  editable="true" />
+    <parameter name="[ssrc]" operation="set" value="1000" description="ssrc"/>
+    <parameter name="file_g729" operation="file.readmedia" value="g729.right.pdml"/>
+
+    <for index="[index]" from="00" to="04" step="1">
+    <testcase name="replica_test_reserve_link_[index]" state="true" number="[iterations]">
+        <parameter name="[localPortRTP]" operation="number.add" value="[localPortRTP]" value2="[index]" description="local port of the MTS host"/>
+        <parameter name="[ssrc]" operation="number.add" value="[ssrc]" value2="[index]" description="ssrc"/>
+        <parameter name="[replica_test_reserve_link]" operation="set" value="[replica_test_reserve_link]_[index]"/>
+        <parameter name="[remoteHostRTP]" operation="set" value="192.168.106.97"/>
+        <scenario file="SingleFlow_mx_g729.xml" name="replica_test_reserve_link" state="true" routingName="replica_test_reserve_link"/>
+    </testcase>
+    </for>
+
+
+</test>
+
